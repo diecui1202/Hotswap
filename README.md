@@ -1,4 +1,4 @@
 Hotswap
 =======
 
-A framework for JVM hot code replacement.
+A Java framework for JVM hotwap. (For study)
