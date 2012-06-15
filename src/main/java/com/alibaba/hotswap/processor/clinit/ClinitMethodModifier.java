@@ -16,11 +16,8 @@ import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
- * <pre>
- * Insert __hotswap_static_field_holder__ initialize code at the beginning of clinit
- * 
- * Set this class has beed initialized
- * </pre>
+ * Insert __hotswap_static_field_holder__ initialize code at the beginning of clinit method. Set this class has beed
+ * initialized.
  * 
  * @author yong.zhuy 2012-5-24 12:23:22
  */
