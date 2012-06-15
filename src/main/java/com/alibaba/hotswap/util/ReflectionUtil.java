@@ -8,7 +8,6 @@ import java.util.List;
 /**
  * @author yong.zhuy 2012-6-5 12:05:20
  */
-@SuppressWarnings("unchecked")
 public final class ReflectionUtil {
 
     public static Object getFieldValue(Object target, String fieldName) {
@@ -51,17 +50,17 @@ public final class ReflectionUtil {
         }
     }
 
-    public static <T> T invoke(Object target, String methodName, Object... params) {
+    public static Object invoke(Object target, String methodName, Object... params) {
         return invoke(target.getClass(), target, methodName, params);
     }
 
-    public static <T> T invoke(Class<?> clazz, Object target, String methodName, Object... params) {
+    public static Object invoke(Class<?> clazz, Object target, String methodName, Object... params) {
         try {
             Class<?>[] paraClazes = getParameterClazz(params);
             Method method = clazz.getDeclaredMethod(methodName, paraClazes);
             method.setAccessible(true);
             Object result = method.invoke(target, params);
-            return (T) result;
+            return result;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

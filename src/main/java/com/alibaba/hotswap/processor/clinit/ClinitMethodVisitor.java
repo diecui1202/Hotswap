@@ -78,7 +78,7 @@ public class ClinitMethodVisitor extends BaseClassVisitor {
     }
 
     /**
-     * Generate <code>&lt;clinit&gt;</code>£¬call <code>__$$hotswap_clinit$$__</code>
+     * Generate <code>&lt;clinit&gt;</code>, call <code>__$$hotswap_clinit$$__</code>
      */
     private void generateClinit() {
         MethodVisitor clinit = cv.visitMethod(Opcodes.ACC_STATIC, HotswapConstants.CLINIT, "()V", null, null);
