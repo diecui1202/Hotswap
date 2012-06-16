@@ -13,7 +13,7 @@ package com.alibaba.hotswap.constant;
 public interface HotswapConstants {
 
     /**
-     * &lt;clinit&gt;
+     * &lt;clinit&gt; method name
      */
     String CLINIT              = "<clinit>";
     String HOTSWAP_CLINIT      = "__$$hotswap_clinit$$__";
@@ -25,6 +25,11 @@ public interface HotswapConstants {
     /**
      * field
      */
-    String FIELD_HOLDER        = "__hotswap_field_holder__";
-    String STATIC_FIELD_HOLDER = "__hotswap_static_field_holder__";
+    String FIELD_HOLDER        = "__$$hotswap_field_holder$$__";
+    String STATIC_FIELD_HOLDER = "__$$hotswap_static_field_holder$$__";
+
+    /**
+     * field which is modified its access, then alias it
+     */
+    String PREFIX_FIELD_ALIAS  = "__$$hotswap_field_alias$$__";
 }

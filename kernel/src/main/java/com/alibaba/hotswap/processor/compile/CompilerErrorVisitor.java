@@ -13,16 +13,17 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.GeneratorAdapter;
 
 import com.alibaba.hotswap.exception.HotswapException;
+import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 
 /**
  * Force hotswap when eclipse compile a Java source file which has compiler errors.
  * 
  * @author yong.zhuy 2012-5-24 12:17:22
  */
-public class CompilerErrorVisitor extends ClassVisitor {
+public class CompilerErrorVisitor extends BaseClassVisitor {
 
     public CompilerErrorVisitor(ClassVisitor cv){
-        super(Opcodes.ASM4, cv);
+        super(cv);
     }
 
     @Override

@@ -7,16 +7,11 @@
  */
 package com.alibaba.hotswap.processor.field.holder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
-import com.alibaba.hotswap.meta.ClassMeta;
-import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
@@ -26,8 +21,6 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  * @author yong.zhuy 2012-6-13
  */
 public class FieldHolderVisitor extends BaseClassVisitor {
-
-    private List<FieldMeta> fms = new ArrayList<FieldMeta>();
 
     public FieldHolderVisitor(ClassVisitor cv){
         super(cv);
@@ -39,15 +32,18 @@ public class FieldHolderVisitor extends BaseClassVisitor {
 
         addFieldHolder();
         addStaticFieldHolder();
+        
+        HotswapRuntime.getClassMeta(className).reset();
     }
 
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-        fms.add(new FieldMeta(access, name, desc, signature, value));
 
         if (!HotswapRuntime.getClassInitialized(className)) {
             HotswapRuntime.getClassMeta(className).putFieldMeta(access, name, desc, signature, value);
         }
+
+        HotswapRuntime.getClassMeta(className).addloadedFieldMeta(access, name, desc, signature, value);
 
         return null;
     }
@@ -72,40 +68,6 @@ public class FieldHolderVisitor extends BaseClassVisitor {
 
     @Override
     public void visitEnd() {
-        if (!HotswapRuntime.getClassInitialized(className)) {
-            // First load
-            for (FieldMeta fm : fms) {
-                FieldVisitor fv = cv.visitField(fm.access, fm.name, fm.desc, fm.signature, fm.value);
-                if (fv != null) {
-                    fv.visitEnd();
-                }
-            }
-        } else {
-            // Reload
-            ClassMeta cm = HotswapRuntime.getClassMeta(className);
-            for (String fmKey : cm.primaryFieldKeyList) {
-                FieldMeta fm = cm.fieldMetas.get(fmKey);
-                FieldVisitor fv = cv.visitField(fm.access, fm.name, fm.desc, fm.signature, null);
-                if (fv != null) {
-                    fv.visitEnd();
-                }
-            }
-
-            // Set add/remove field, set deleted flag to false
-            cm.reset();
-            for (FieldMeta fm : fms) {
-                String fmKey = fm.getKey();
-                FieldMeta fm2 = cm.getFieldMeta(fmKey);
-                if (fm2 == null) {
-                    // This is a new field, set added flag and deleted flag
-                    cm.addFieldMeta(fm.access, fm.name, fm.desc, fm.signature, fm.value);
-                } else {
-                    // This is an exist field, update access, signature and deleted flag
-                    cm.putFieldMeta(fm.access, fm.name, fm.desc, fm.signature, fm.value);
-                }
-            }
-        }
-
         super.visitEnd();
     }
 }

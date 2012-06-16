@@ -12,6 +12,8 @@ public class FieldMeta {
     public String signature;
     public Object value;
 
+    public int    loadedIndex;
+
     public FieldMeta(int access, String name, String desc, String signature, Object value){
         this.access = access;
         this.name = name;
@@ -20,8 +22,7 @@ public class FieldMeta {
         this.value = value;
     }
 
-    public boolean deleted = false;
-    public boolean added   = false;
+    public boolean added = false;
 
     public boolean isAdded() {
         return added;
@@ -31,11 +32,16 @@ public class FieldMeta {
         return (access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC;
     }
 
+    public boolean isDeleted(int loadedIndex) {
+        return this.loadedIndex < loadedIndex;
+    }
+
     public String getKey() {
         return HotswapFieldUtil.getFieldKey(name, desc);
     }
 
-    public String toString() {
-        return HotswapFieldUtil.getFieldKey(name, desc) + "-" + added + "-" + deleted;
+    public String toString(int loadedIndex) {
+        return access + HotswapFieldUtil.getFieldKey(name, desc) + ", signature: " + signature + ", added: " + added
+               + ", deleted: " + isDeleted(loadedIndex) + ", loadedIndex: " + this.loadedIndex;
     }
 }

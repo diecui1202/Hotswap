@@ -7,37 +7,36 @@
  */
 package com.alibaba.hotswap.meta;
 
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Map;
 
-import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
-import com.alibaba.hotswap.util.ReflectionUtil;
 
 /**
  * @author yong.zhuy 2012-5-18 12:39:09
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class ClassMeta {
 
-    public String                           name;
-    public String                           path;
-    public long                             lastModified;
-    public boolean                          initialized         = false;
-    public Class<?>                         clazz;
+    public String                 name;
+    public String                 path;
+    public long                   lastModified;
+    public boolean                initialized         = false;
+    public Class<?>               clazz;
 
     // Class's fields
-    public ConcurrentMap<String, FieldMeta> fieldMetas          = new ConcurrentHashMap<String, FieldMeta>();
-    public List<String>                     primaryFieldKeyList = new LinkedList<String>();
+    public Map<String, FieldMeta> fieldMetas          = new HashMap<String, FieldMeta>();
+    public List<FieldMeta>        loadedFieldMetas    = new LinkedList<FieldMeta>();
 
-    private List<WeakReference<Object>>     objs                = new LinkedList<WeakReference<Object>>();
+    public List<String>           primaryFieldKeyList = new LinkedList<String>();
 
-    public void addNewInstance(Object obj) {
-        objs.add(new WeakReference(obj));
+    // loaded index
+    public int                    loadedIndex         = 0;
+
+    public void addloadedFieldMeta(int access, String name, String desc, String signature, Object value) {
+        FieldMeta fm = new FieldMeta(access, name, desc, signature, value);
+        loadedFieldMetas.add(fm);
     }
 
     public void putFieldMeta(int access, String name, String desc, String signature, Object value) {
@@ -55,7 +54,7 @@ public class ClassMeta {
         fm.signature = signature;
         fm.value = value;
 
-        fm.deleted = false;
+        fm.loadedIndex = this.loadedIndex;
 
         fieldMetas.put(key, fm);
     }
@@ -64,29 +63,14 @@ public class ClassMeta {
         FieldMeta fm = new FieldMeta(access, name, desc, signature, value);
         String key = fm.getKey();
 
-        fm.deleted = false;
+        fm.loadedIndex = this.loadedIndex;
         fm.added = true;
 
         fieldMetas.put(key, fm);
     }
 
-    public void setOldInstanceField(int access, String name, String desc, Object value) {
-        Iterator<WeakReference<Object>> iter = objs.iterator();
-
-        while (iter.hasNext()) {
-            WeakReference<Object> wf = iter.next();
-            Object o = wf.get();
-            if (o == null) {
-                iter.remove();
-                continue;
-            }
-
-            ConcurrentHashMap fieldHolder = (ConcurrentHashMap) ReflectionUtil.getFieldValue(o,
-                                                                                             HotswapConstants.FIELD_HOLDER);
-            if (fieldHolder != null) {
-                fieldHolder.put(name + "(" + desc + ")", value);
-            }
-        }
+    public void removeFieldMeta(String fieldKey) {
+        fieldMetas.remove(fieldKey);
     }
 
     public boolean containField(String fieldKey) {
@@ -94,16 +78,31 @@ public class ClassMeta {
     }
 
     public FieldMeta getFieldMeta(String fieldKey) {
-        return fieldMetas.get(fieldKey);
+        FieldMeta fm = fieldMetas.get(fieldKey);
+
+        return fm;
     }
 
     public void reset() {
-        for (FieldMeta fm : fieldMetas.values()) {
-            fm.deleted = true;
-        }
+        loadedFieldMetas.clear();
+        this.loadedIndex++;
     }
 
     public String toString() {
-        return name + " [" + initialized + "]";
+        return name + " [" + initialized + "], loadedIndex [" + loadedIndex + "], fieldMeta {" + getFieldMetasString()
+               + "}";
+    }
+
+    private String getFieldMetasString() {
+        StringBuilder sb = new StringBuilder();
+        int index = 0, size = fieldMetas.size();
+        for (FieldMeta fm : fieldMetas.values()) {
+            sb.append(fm.toString(this.loadedIndex));
+            if (++index != size) {
+                sb.append("; ");
+            }
+        }
+
+        return sb.toString();
     }
 }
