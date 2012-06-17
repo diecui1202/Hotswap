@@ -16,7 +16,7 @@ import org.objectweb.asm.ClassWriter;
 
 import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.exception.HotswapException;
-import com.alibaba.hotswap.processor.loader.ClassLoaderVisitor;
+import com.alibaba.hotswap.processor.jdk.classloader.ClassLoaderVisitor;
 import com.alibaba.hotswap.reload.ReloadChecker;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
