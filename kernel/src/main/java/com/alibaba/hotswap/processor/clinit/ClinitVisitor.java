@@ -22,11 +22,11 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  * 
  * @author yong.zhuy 2012-6-13 14:25:36
  */
-public class ClinitMethodVisitor extends BaseClassVisitor {
+public class ClinitVisitor extends BaseClassVisitor {
 
     private boolean hasClinitMethod;
 
-    public ClinitMethodVisitor(ClassVisitor cv){
+    public ClinitVisitor(ClassVisitor cv){
         super(cv);
         hasClinitMethod = false;
     }
@@ -41,7 +41,7 @@ public class ClinitMethodVisitor extends BaseClassVisitor {
 
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-            return new ClinitMethodModifier(mv, access, name, desc, className);
+            return new ClinitModifier(mv, access, name, desc, className);
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }

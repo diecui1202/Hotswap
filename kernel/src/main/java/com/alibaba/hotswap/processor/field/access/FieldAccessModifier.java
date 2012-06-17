@@ -13,6 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
+import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
@@ -31,66 +32,66 @@ public class FieldAccessModifier extends BaseMethodAdapter {
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
         if (HotswapRuntime.getClassInitialized(className) && HotswapRuntime.hasClassMeta(owner)
             && !name.equals(HotswapConstants.STATIC_FIELD_HOLDER) && !name.equals(HotswapConstants.FIELD_HOLDER)) {
-            if (opcode == Opcodes.PUTSTATIC) {
-                // put static
-                FieldMeta fm = HotswapRuntime.getClassMeta(owner).getFieldMeta(HotswapFieldUtil.getFieldKey(name, desc));
-                if (fm == null || fm.isAdded()) {
-                    box(Type.getType(desc));
+
+            ClassMeta classMeta = HotswapRuntime.getClassMeta(owner);
+            String fmKey = HotswapFieldUtil.getFieldKey(name, desc);
+            FieldMeta fm = classMeta.getFieldMeta(fmKey);
+            if (fm != null && classMeta.primaryFieldKeyList.contains(fmKey) && fm.isDeleted(classMeta.loadedIndex)) {
+                // If this accessed field is primary and deleted, it perhaps is a alias field
+                fm = classMeta.getFieldMeta(HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + fm.name,
+                                                                         fm.desc));
+            }
+
+            if (fm != null && fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
+                if (opcode == Opcodes.PUTSTATIC) {
+                    // put static
+                    box(Type.getType(fm.desc));
                     mv.visitFieldInsn(Opcodes.GETSTATIC, owner, HotswapConstants.STATIC_FIELD_HOLDER,
                                       "Ljava/util/concurrent/ConcurrentHashMap;");
-                    mv.visitLdcInsn(name);
-                    mv.visitLdcInsn(desc);
+                    mv.visitLdcInsn(fm.name);
+                    mv.visitLdcInsn(fm.desc);
                     mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapFieldUtil.class),
                                        "setFieldValue",
                                        "(Ljava/lang/Object;Ljava/util/concurrent/ConcurrentHashMap;Ljava/lang/String;Ljava/lang/String;)V");
                     return;
-                }
-            } else if (opcode == Opcodes.GETSTATIC) {
-                // get static
-                FieldMeta fm = HotswapRuntime.getClassMeta(owner).getFieldMeta(HotswapFieldUtil.getFieldKey(name, desc));
-                if (fm == null || fm.isAdded()) {
+                } else if (opcode == Opcodes.GETSTATIC) {
+                    // get static
                     mv.visitFieldInsn(Opcodes.GETSTATIC, owner, HotswapConstants.STATIC_FIELD_HOLDER,
                                       "Ljava/util/concurrent/ConcurrentHashMap;");
-                    mv.visitLdcInsn(name);
-                    mv.visitLdcInsn(desc);
+                    mv.visitLdcInsn(fm.name);
+                    mv.visitLdcInsn(fm.desc);
                     mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapFieldUtil.class),
                                        "getFieldValue",
                                        "(Ljava/util/concurrent/ConcurrentHashMap;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
-                    unbox(Type.getType(desc));
+                    unbox(Type.getType(fm.desc));
                     return;
-                }
-            } else if (opcode == Opcodes.PUTFIELD) {
-                // put field
-                FieldMeta fm = HotswapRuntime.getClassMeta(owner).getFieldMeta(HotswapFieldUtil.getFieldKey(name, desc));
-                if (fm == null || fm.isAdded()) {
+                } else if (opcode == Opcodes.PUTFIELD) {
+                    // put field
                     // stack: obj fieldValue
-                    box(Type.getType(desc));
+                    box(Type.getType(fm.desc));
                     mv.visitInsn(Opcodes.SWAP);
                     mv.visitFieldInsn(Opcodes.GETFIELD, owner, HotswapConstants.FIELD_HOLDER,
                                       "Ljava/util/concurrent/ConcurrentHashMap;");
-                    mv.visitLdcInsn(name);
-                    mv.visitLdcInsn(desc);
+                    mv.visitLdcInsn(fm.name);
+                    mv.visitLdcInsn(fm.desc);
                     mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapFieldUtil.class),
                                        "setFieldValue",
                                        "(Ljava/lang/Object;Ljava/util/concurrent/ConcurrentHashMap;Ljava/lang/String;Ljava/lang/String;)V");
 
                     return;
-                }
-            } else if (opcode == Opcodes.GETFIELD) {
-                // get field
-                FieldMeta fm = HotswapRuntime.getClassMeta(owner).getFieldMeta(HotswapFieldUtil.getFieldKey(name, desc));
-                if (fm == null || fm.isAdded()) {
+                } else if (opcode == Opcodes.GETFIELD) {
+                    // get field
                     // stack: obj
                     mv.visitFieldInsn(Opcodes.GETFIELD, owner, HotswapConstants.FIELD_HOLDER,
                                       "Ljava/util/concurrent/ConcurrentHashMap;");
-                    mv.visitLdcInsn(name);
-                    mv.visitLdcInsn(desc);
+                    mv.visitLdcInsn(fm.name);
+                    mv.visitLdcInsn(fm.desc);
                     mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapFieldUtil.class),
                                        "getFieldValue",
                                        "(Ljava/util/concurrent/ConcurrentHashMap;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;");
 
                     Label notnull = newLabel();
-                    Type type = Type.getType(desc);
+                    Type type = Type.getType(fm.desc);
 
                     mv.visitInsn(Opcodes.DUP);
                     mv.visitJumpInsn(Opcodes.IFNONNULL, notnull);

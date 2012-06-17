@@ -21,9 +21,9 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  * 
  * @author yong.zhuy 2012-5-24 12:23:22
  */
-public class ClinitMethodModifier extends BaseMethodAdapter {
+public class ClinitModifier extends BaseMethodAdapter {
 
-    public ClinitMethodModifier(MethodVisitor mv, int access, String name, String desc, String className){
+    public ClinitModifier(MethodVisitor mv, int access, String name, String desc, String className){
         super(mv, access, name, desc, className);
     }
 
