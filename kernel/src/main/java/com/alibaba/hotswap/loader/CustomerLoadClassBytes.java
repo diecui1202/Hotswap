@@ -12,7 +12,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import com.alibaba.hotswap.exception.HotswapException;
-import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.processor.HotswapProcessorFactory;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
@@ -24,7 +23,6 @@ public class CustomerLoadClassBytes {
     public static byte[] loadBytesFromPath(String name, String classPath) {
         File classFile = new File(classPath);
         HotswapRuntime.updateClassMeta(name, classFile);
-        ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
         try {
             FileInputStream fis = new FileInputStream(classFile);
             byte[] classByte = null;
@@ -39,17 +37,7 @@ public class CustomerLoadClassBytes {
                 throw new IllegalStateException("read class bytes error, len == 0");
             }
 
-            try {
-                classMeta.loadedBytes = classByte;
-                Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(name.replace("/", ".")
-                                                                                                  + "$$V$$"
-                                                                                                  + classMeta.loadedIndex);
-                HotswapRuntime.getClassMeta(name).newestClass = clazz;
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
-            }
-
-            return HotswapProcessorFactory.process(classByte);
+            return HotswapProcessorFactory.process(name, classByte);
         } catch (IOException e) {
             throw new HotswapException("load class error, name: " + name, e);
         }

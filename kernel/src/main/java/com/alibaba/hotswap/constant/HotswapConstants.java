@@ -32,4 +32,6 @@ public interface HotswapConstants {
      * field which is modified its access, then alias it
      */
     String PREFIX_FIELD_ALIAS  = "__$$hotswap_field_alias$$__";
+
+    String V_CLASS_PATTERN     = "$$V$$";
 }

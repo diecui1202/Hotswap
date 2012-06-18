@@ -13,7 +13,6 @@ import org.objectweb.asm.Opcodes;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
-import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
  * Add <code>__$$hotswap_field_holder$$__</code> and <code>__$$hotswap_static_field_holder$$__</code>
