@@ -12,6 +12,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.objectweb.asm.tree.FieldNode;
+
 import com.alibaba.hotswap.util.HotswapFieldUtil;
 
 /**
@@ -24,19 +26,22 @@ public class ClassMeta {
     public long                   lastModified;
     public boolean                initialized         = false;
     public Class<?>               clazz;
+    public Class<?>               newestClass;
 
     // Class's fields
     public Map<String, FieldMeta> fieldMetas          = new HashMap<String, FieldMeta>();
-    public List<FieldMeta>        loadedFieldMetas    = new LinkedList<FieldMeta>();
+
+    public byte[]                 loadedBytes;
+    public Map<String, FieldNode> loadedFieldNodes    = new HashMap<String, FieldNode>();
+    public Map<String, FieldNode> primaryFieldNodes   = new HashMap<String, FieldNode>();
 
     public List<String>           primaryFieldKeyList = new LinkedList<String>();
 
     // loaded index
     public int                    loadedIndex         = 0;
 
-    public void addloadedFieldMeta(int access, String name, String desc, String signature, Object value) {
-        FieldMeta fm = new FieldMeta(access, name, desc, signature, value);
-        loadedFieldMetas.add(fm);
+    public void addloadedFieldMeta(FieldNode fn) {
+        loadedFieldNodes.put(HotswapFieldUtil.getFieldKey(fn.name, fn.desc), fn);
     }
 
     public void putFieldMeta(int access, String name, String desc, String signature, Object value) {
@@ -84,7 +89,7 @@ public class ClassMeta {
     }
 
     public void reset() {
-        loadedFieldMetas.clear();
+        loadedFieldNodes.clear();
         this.loadedIndex++;
     }
 

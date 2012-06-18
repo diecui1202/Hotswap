@@ -33,6 +33,10 @@ public class HotswapRuntime {
         return meta != null;
     }
 
+    public static byte[] getVClassBytes(String className) {
+        return getClassMeta(className).loadedBytes;
+    }
+
     public static ClassMeta getClassMeta(String className) {
         className = HotswapUtil.getInternalClassName(className);
 

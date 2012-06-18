@@ -10,6 +10,7 @@ package com.alibaba.hotswap;
 import java.io.InputStream;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
+import java.net.URLClassLoader;
 
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
@@ -17,6 +18,7 @@ import org.objectweb.asm.ClassWriter;
 import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.exception.HotswapException;
 import com.alibaba.hotswap.processor.jdk.classloader.ClassLoaderVisitor;
+import com.alibaba.hotswap.processor.jdk.classloader.URLClassLoaderVisitor;
 import com.alibaba.hotswap.reload.ReloadChecker;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
@@ -54,8 +56,10 @@ public class AgentInstall {
         }
 
         String trace = System.getProperty("hotswap.trace");
-        if (trace != null && trace.equalsIgnoreCase("true")) {
-            HotswapConfiguration.TRACE = true;
+        if (trace != null) {
+            if (trace.equalsIgnoreCase("true")) {
+                HotswapConfiguration.TRACE = true;
+            }
         }
     }
 
@@ -71,6 +75,19 @@ public class AgentInstall {
             inst.redefineClasses(definitions);
         } catch (Exception e) {
             throw new HotswapException("redefine class error, name: " + ClassLoader.class.getName(), e);
+        }
+
+        try {
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+            URLClassLoaderVisitor clv = new URLClassLoaderVisitor(cw);
+            InputStream is = ClassLoader.getSystemResourceAsStream(URLClassLoader.class.getName().replace('.', '/')
+                                                                   + ".class");
+            ClassReader cr = new ClassReader(is);
+            cr.accept(clv, 0);
+            ClassDefinition definitions = new ClassDefinition(URLClassLoader.class, cw.toByteArray());
+            inst.redefineClasses(definitions);
+        } catch (Exception e) {
+            throw new HotswapException("redefine class error, name: " + URLClassLoader.class.getName(), e);
         }
     }
 

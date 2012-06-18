@@ -29,11 +29,11 @@ public class DefineClassMethodModifier extends MethodVisitor {
     public void visitCode() {
         super.visitCode();
 
-        Label old = new Label();
         mv.visitVarInsn(Opcodes.ALOAD, 1);
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapConfiguration.class),
                            "getClassPathInWorkspace", "(Ljava/lang/String;)Ljava/lang/String;");
         mv.visitInsn(Opcodes.DUP);
+        Label old = new Label();
         mv.visitJumpInsn(Opcodes.IFNULL, old);
 
         mv.visitVarInsn(Opcodes.ALOAD, 1); // className

@@ -12,12 +12,14 @@ import java.util.Map.Entry;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
+import org.objectweb.asm.tree.FieldNode;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
+import com.alibaba.hotswap.util.HotswapFieldUtil;
 import com.alibaba.hotswap.util.HotswapUtil;
 
 /**
@@ -39,47 +41,48 @@ public class FieldAheadVisitor extends BaseClassVisitor {
 
         if (!classMeta.initialized) {
             // First load
-            for (FieldMeta fm : HotswapRuntime.getClassMeta(className).loadedFieldMetas) {
-                FieldVisitor fv = cv.visitField(fm.access, fm.name, fm.desc, fm.signature, fm.value);
-                if (fv != null) {
-                    fv.visitEnd();
-                }
+            for (FieldNode fn : classMeta.primaryFieldNodes.values()) {
+                fn.accept(cv);
             }
         } else {
             // Reload
 
             // 1. Visit the primary fields.
-            for (String fmKey : classMeta.primaryFieldKeyList) {
-                FieldMeta fm = classMeta.fieldMetas.get(fmKey);
-                FieldVisitor fv = cv.visitField(fm.access, fm.name, fm.desc, fm.signature, null);
-                if (fv != null) {
-                    fv.visitEnd();
+            for (String key : classMeta.primaryFieldKeyList) {
+                FieldNode primaryFN = classMeta.primaryFieldNodes.get(key);
+
+                if (classMeta.loadedFieldNodes.containsKey(key)
+                    && classMeta.getFieldMeta(key).access == primaryFN.access) {
+                    classMeta.loadedFieldNodes.get(key).accept(cv);
+                    classMeta.loadedFieldNodes.remove(key);
+                } else {
+                    primaryFN.accept(cv);
                 }
             }
 
             // 2. Add and remove modified field.
-            for (FieldMeta fm : classMeta.loadedFieldMetas) {
+            for (FieldNode fn : classMeta.loadedFieldNodes.values()) {
                 // All these fields are the reloaded class's fields
 
-                String fieldKey = fm.getKey();
+                String fieldKey = HotswapFieldUtil.getFieldKey(fn.name, fn.desc);
                 FieldMeta fm2 = classMeta.getFieldMeta(fieldKey);
 
                 if (fm2 == null) {
                     // This is a new field
-                    classMeta.addFieldMeta(fm.access, fm.name, fm.desc, fm.signature, fm.value);
+                    classMeta.addFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
                 } else {
                     if (classMeta.primaryFieldKeyList.contains(fieldKey)) {
                         // It's a primary field
-                        if (fm.access == fm2.access) {
+                        if (fn.access == fm2.access) {
                             // An exist field
-                            classMeta.putFieldMeta(fm.access, fm.name, fm.desc, fm.signature, fm.value);
+                            classMeta.putFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
                         } else {
                             // Modified field, alias it
-                            fm.name = HotswapConstants.PREFIX_FIELD_ALIAS + fm.name;
-                            classMeta.addFieldMeta(fm.access, fm.name, fm.desc, fm.signature, fm.value);
+                            fn.name = HotswapConstants.PREFIX_FIELD_ALIAS + fn.name;
+                            classMeta.addFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
                         }
                     } else {
-                        classMeta.putFieldMeta(fm.access, fm.name, fm.desc, fm.signature, fm.value);
+                        classMeta.putFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
                     }
                 }
             }

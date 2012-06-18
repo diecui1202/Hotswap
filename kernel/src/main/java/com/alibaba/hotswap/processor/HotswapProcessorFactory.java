@@ -25,6 +25,7 @@ import com.alibaba.hotswap.processor.field.access.FieldAccessVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldAheadVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldHolderInitVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldHolderVisitor;
+import com.alibaba.hotswap.processor.prefix.FieldNodeHolderVisitor;
 
 /**
  * @author yong.zhuy 2012-6-13
@@ -34,30 +35,35 @@ public class HotswapProcessorFactory {
     private static final List<List<Class<? extends BaseClassVisitor>>> hotswap_processor_holder = new ArrayList<List<Class<? extends BaseClassVisitor>>>();
 
     static {
-        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
-        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
 
         // Do not change these processors' order!!!
-        hotswap_processor_holder.get(0).add(CompilerErrorVisitor.class);
-        hotswap_processor_holder.get(0).add(FieldHolderVisitor.class);
-        hotswap_processor_holder.get(0).add(FieldHolderInitVisitor.class);
-        hotswap_processor_holder.get(0).add(ClinitVisitor.class);
+        int index = 0;
+        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
+        hotswap_processor_holder.get(index).add(CompilerErrorVisitor.class);
+        hotswap_processor_holder.get(index).add(FieldNodeHolderVisitor.class);
 
-        hotswap_processor_holder.get(1).add(FieldAheadVisitor.class);
-        hotswap_processor_holder.get(1).add(FieldAccessVisitor.class);
+        index++;
+        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
+        hotswap_processor_holder.get(index).add(FieldHolderVisitor.class);
+        hotswap_processor_holder.get(index).add(FieldHolderInitVisitor.class);
+        hotswap_processor_holder.get(index).add(ClinitVisitor.class);
+
+        index++;
+        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
+        hotswap_processor_holder.get(index).add(FieldAheadVisitor.class);
+        hotswap_processor_holder.get(index).add(FieldAccessVisitor.class);
     }
 
     @SuppressWarnings("unchecked")
     public static byte[] process(byte[] bytes) {
+
         byte[] classBytes = bytes;
         for (int i = 0; i < hotswap_processor_holder.size(); i++) {
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 
             ClassVisitor cv = cw;
-            if (i == hotswap_processor_holder.size() - 1) {
-                if (HotswapConfiguration.TRACE) {
-                    cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
-                }
+            if (HotswapConfiguration.TRACE && i == hotswap_processor_holder.size() - 1) {
+                cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
             }
 
             try {

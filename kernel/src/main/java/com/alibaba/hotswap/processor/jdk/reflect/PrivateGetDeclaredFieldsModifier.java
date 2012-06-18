@@ -22,7 +22,6 @@ public class PrivateGetDeclaredFieldsModifier extends BaseMethodAdapter {
         super(mv, access, name, desc, className);
     }
 
-    @Override
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.ARETURN) {
             mv.visitVarInsn(Opcodes.ALOAD, 0);

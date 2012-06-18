@@ -32,19 +32,10 @@ public class FieldHolderVisitor extends BaseClassVisitor {
 
         addFieldHolder();
         addStaticFieldHolder();
-        
-        HotswapRuntime.getClassMeta(className).reset();
     }
 
     @Override
     public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
-
-        if (!HotswapRuntime.getClassInitialized(className)) {
-            HotswapRuntime.getClassMeta(className).putFieldMeta(access, name, desc, signature, value);
-        }
-
-        HotswapRuntime.getClassMeta(className).addloadedFieldMeta(access, name, desc, signature, value);
-
         return null;
     }
 
