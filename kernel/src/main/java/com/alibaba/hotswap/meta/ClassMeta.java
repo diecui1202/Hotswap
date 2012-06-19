@@ -7,8 +7,8 @@
  */
 package com.alibaba.hotswap.meta;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +26,7 @@ public class ClassMeta {
     public long                   lastModified;
     public boolean                initialized         = false;
     public Class<?>               clazz;
-    public Class<?>               newestClass;
+    public Class<?>               vClass;
 
     // Class's fields
     public Map<String, FieldMeta> fieldMetas          = new HashMap<String, FieldMeta>();
@@ -35,7 +35,7 @@ public class ClassMeta {
     public Map<String, FieldNode> loadedFieldNodes    = new HashMap<String, FieldNode>();
     public Map<String, FieldNode> primaryFieldNodes   = new HashMap<String, FieldNode>();
 
-    public List<String>           primaryFieldKeyList = new LinkedList<String>();
+    public List<String>           primaryFieldKeyList = new ArrayList<String>();
 
     // loaded index
     public int                    loadedIndex         = 0;
@@ -44,6 +44,12 @@ public class ClassMeta {
         loadedFieldNodes.put(HotswapFieldUtil.getFieldKey(fn.name, fn.desc), fn);
     }
 
+    public void putFieldMeta(FieldMeta fm) {
+        fm.loadedIndex = this.loadedIndex;
+        fieldMetas.put(fm.getKey(), fm);
+    }
+
+    // for primary field
     public void putFieldMeta(int access, String name, String desc, String signature, Object value) {
         String key = HotswapFieldUtil.getFieldKey(name, desc);
         FieldMeta fm = fieldMetas.get(key);
@@ -58,12 +64,11 @@ public class ClassMeta {
         fm.desc = desc;
         fm.signature = signature;
         fm.value = value;
-
         fm.loadedIndex = this.loadedIndex;
-
         fieldMetas.put(key, fm);
     }
 
+    // for new field
     public void addFieldMeta(int access, String name, String desc, String signature, Object value) {
         FieldMeta fm = new FieldMeta(access, name, desc, signature, value);
         String key = fm.getKey();
@@ -84,7 +89,6 @@ public class ClassMeta {
 
     public FieldMeta getFieldMeta(String fieldKey) {
         FieldMeta fm = fieldMetas.get(fieldKey);
-
         return fm;
     }
 

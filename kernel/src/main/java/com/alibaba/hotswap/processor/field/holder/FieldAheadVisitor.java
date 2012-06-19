@@ -40,8 +40,8 @@ public class FieldAheadVisitor extends BaseClassVisitor {
 
         if (!classMeta.initialized) {
             // First load
-            for (FieldNode fn : classMeta.primaryFieldNodes.values()) {
-                fn.accept(cv);
+            for (String key : classMeta.primaryFieldKeyList) {
+                classMeta.primaryFieldNodes.get(key).accept(cv);
             }
         } else {
             // Reload
@@ -49,12 +49,19 @@ public class FieldAheadVisitor extends BaseClassVisitor {
             // 1. Visit the primary fields.
             for (String key : classMeta.primaryFieldKeyList) {
                 FieldNode primaryFN = classMeta.primaryFieldNodes.get(key);
-
-                if (classMeta.loadedFieldNodes.containsKey(key)
-                    && classMeta.getFieldMeta(key).access == primaryFN.access) {
-                    classMeta.loadedFieldNodes.get(key).accept(cv);
-                    classMeta.loadedFieldNodes.remove(key);
+                FieldNode loadedFN = classMeta.loadedFieldNodes.get(key);
+                if (loadedFN != null) {
+                    if (loadedFN.access == primaryFN.access) {
+                        // Primary field(may change annotation/signature) or change from other field
+                        loadedFN.accept(cv);
+                        classMeta.loadedFieldNodes.remove(key);
+                        // update loadedIndex
+                        classMeta.putFieldMeta(classMeta.getFieldMeta(key));
+                    } else {
+                        primaryFN.accept(cv);
+                    }
                 } else {
+                    // This primary field is removed, so do not change loadedIndex
                     primaryFN.accept(cv);
                 }
             }

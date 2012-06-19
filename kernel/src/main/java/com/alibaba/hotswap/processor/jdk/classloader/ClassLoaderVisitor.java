@@ -11,15 +11,17 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+
 /**
  * The classloader interceptor for custom loading
  * 
  * @author yong.zhuy 2012-5-18 13:14:22
  */
-public class ClassLoaderVisitor extends ClassVisitor {
+public class ClassLoaderVisitor extends BaseClassVisitor {
 
     public ClassLoaderVisitor(ClassVisitor cv){
-        super(Opcodes.ASM4, cv);
+        super(cv);
     }
 
     @Override

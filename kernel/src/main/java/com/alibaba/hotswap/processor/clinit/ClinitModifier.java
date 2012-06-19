@@ -41,6 +41,7 @@ public class ClinitModifier extends BaseMethodAdapter {
     @Override
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.RETURN) {
+
             mv.visitLdcInsn(className);
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "setClassInitialized",
                                "(Ljava/lang/String;)V");

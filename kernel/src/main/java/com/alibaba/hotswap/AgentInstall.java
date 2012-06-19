@@ -8,17 +8,21 @@
 package com.alibaba.hotswap;
 
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
-import java.net.URLClassLoader;
+import java.lang.reflect.Constructor;
+import java.util.Map.Entry;
 
 import org.objectweb.asm.ClassReader;
+import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.util.TraceClassVisitor;
 
 import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.exception.HotswapException;
-import com.alibaba.hotswap.processor.jdk.classloader.ClassLoaderVisitor;
-import com.alibaba.hotswap.processor.jdk.classloader.URLClassLoaderVisitor;
+import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.jdk.JDKClassProcessorFactory;
 import com.alibaba.hotswap.reload.ReloadChecker;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
@@ -32,7 +36,7 @@ public class AgentInstall {
 
         parseArgs(agentArgs);
 
-        redefineClassLoader(inst);
+        transformJDKClasses(inst);
 
         startReloadChecker();
     }
@@ -57,37 +61,31 @@ public class AgentInstall {
 
         String trace = System.getProperty("hotswap.trace");
         if (trace != null) {
-            if (trace.equalsIgnoreCase("true")) {
-                HotswapConfiguration.TRACE = true;
-            }
+            HotswapConfiguration.TRACE = trace;
         }
     }
 
-    public static void redefineClassLoader(Instrumentation inst) {
-        try {
+    public static void transformJDKClasses(Instrumentation inst) {
+        for (Entry<Class<?>, Class<? extends BaseClassVisitor>> entry : JDKClassProcessorFactory.jdk_class_processor_holder.entrySet()) {
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-            ClassLoaderVisitor clv = new ClassLoaderVisitor(cw);
-            InputStream is = ClassLoader.getSystemResourceAsStream(ClassLoader.class.getName().replace('.', '/')
-                                                                   + ".class");
-            ClassReader cr = new ClassReader(is);
-            cr.accept(clv, 0);
-            ClassDefinition definitions = new ClassDefinition(ClassLoader.class, cw.toByteArray());
-            inst.redefineClasses(definitions);
-        } catch (Exception e) {
-            throw new HotswapException("redefine class error, name: " + ClassLoader.class.getName(), e);
-        }
+            ClassVisitor cv = cw;
+            String name = entry.getKey().getName();
 
-        try {
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
-            URLClassLoaderVisitor clv = new URLClassLoaderVisitor(cw);
-            InputStream is = ClassLoader.getSystemResourceAsStream(URLClassLoader.class.getName().replace('.', '/')
-                                                                   + ".class");
-            ClassReader cr = new ClassReader(is);
-            cr.accept(clv, 0);
-            ClassDefinition definitions = new ClassDefinition(URLClassLoader.class, cw.toByteArray());
-            inst.redefineClasses(definitions);
-        } catch (Exception e) {
-            throw new HotswapException("redefine class error, name: " + URLClassLoader.class.getName(), e);
+            if (HotswapConfiguration.TRACE != null && name.equals(HotswapConfiguration.TRACE)) {
+                cv = new TraceClassVisitor(cv, new PrintWriter(System.out));
+            }
+
+            try {
+                Constructor<? extends BaseClassVisitor> c = entry.getValue().getConstructor(ClassVisitor.class);
+                cv = c.newInstance(cv);
+                InputStream is = ClassLoader.getSystemResourceAsStream(name.replace('.', '/') + ".class");
+                ClassReader cr = new ClassReader(is);
+                cr.accept(cv, 0);
+                ClassDefinition definitions = new ClassDefinition(entry.getKey(), cw.toByteArray());
+                inst.redefineClasses(definitions);
+            } catch (Exception e) {
+                throw new HotswapException("redefine class error, name: " + name, e);
+            }
         }
     }
 

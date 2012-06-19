@@ -5,9 +5,9 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.prefix;
+package com.alibaba.hotswap.processor.front;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.objectweb.asm.ClassVisitor;
@@ -23,7 +23,7 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  */
 public class FieldNodeHolderVisitor extends BaseClassVisitor {
 
-    private List<FieldNode> fieldNodes = new LinkedList<FieldNode>();
+    private List<FieldNode> fieldNodes = new ArrayList<FieldNode>();
     private ClassMeta       classMeta;
 
     public FieldNodeHolderVisitor(ClassVisitor cv){

@@ -22,6 +22,14 @@ public class HotswapUtil {
         System.out.println("Hotswap[SYSOUT] - " + obj);
     }
 
+    public static void sysout(Object[] objs) {
+        System.out.print("Hotswap[SYSOUT] - ");
+        for (Object obj : objs) {
+            System.out.print(obj + " ");
+        }
+        System.out.println();
+    }
+
     public static void sysoutRuntime(boolean stage) {
         sysout((stage == true ? "start:" : "end") + HotswapRuntime.CLASS_METAS);
     }

@@ -9,6 +9,7 @@ package com.alibaba.hotswap.processor;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,13 +23,13 @@ import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.processor.clinit.ClinitVisitor;
-import com.alibaba.hotswap.processor.compile.CompilerErrorVisitor;
 import com.alibaba.hotswap.processor.field.access.FieldAccessVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldAheadVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldHolderInitVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldHolderVisitor;
-import com.alibaba.hotswap.processor.prefix.FieldNodeHolderVisitor;
-import com.alibaba.hotswap.processor.vclass.GenerateVClassVisitor;
+import com.alibaba.hotswap.processor.front.FieldNodeHolderVisitor;
+import com.alibaba.hotswap.processor.front.compile.CompilerErrorVisitor;
+import com.alibaba.hotswap.processor.front.vclass.GenerateVClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
@@ -69,7 +70,7 @@ public class HotswapProcessorFactory {
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 
             ClassVisitor cv = cw;
-            if (HotswapConfiguration.TRACE && i == hotswap_processor_holder.size() - 1) {
+            if (HotswapConfiguration.TRACE != null && name.indexOf(HotswapConfiguration.TRACE) >= 0) {
                 cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
             }
 
@@ -90,17 +91,20 @@ public class HotswapProcessorFactory {
                 try {
                     ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
                     classMeta.loadedBytes = vclassBytes;
-                    Class<?> clazz = Thread.currentThread().getContextClassLoader().loadClass(name.replace("/", ".")
-                                                                                                      + HotswapConstants.V_CLASS_PATTERN
-                                                                                                      + classMeta.loadedIndex);
-                    HotswapRuntime.getClassMeta(name).newestClass = clazz;
+                    Class<?> vClass = Thread.currentThread().getContextClassLoader().loadClass(name.replace("/", ".")
+                                                                                                       + HotswapConstants.V_CLASS_PATTERN
+                                                                                                       + classMeta.loadedIndex);
+                    Field[] fields = vClass.getDeclaredFields();
+                    for (Field f : fields) {
+                        System.out.println(f);
+                    }
+                    HotswapRuntime.getClassMeta(name).vClass = vClass;
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }
             } else {
                 classBytes = cw.toByteArray();
             }
-
         }
 
         return classBytes;

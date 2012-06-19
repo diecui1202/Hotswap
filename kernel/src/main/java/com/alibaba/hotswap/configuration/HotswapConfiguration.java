@@ -17,7 +17,7 @@ import java.util.List;
 public class HotswapConfiguration {
 
     public static boolean      VERBOSE        = false;
-    public static boolean      TRACE          = false;
+    public static String       TRACE          = null;
 
     public static List<String> WORKSPACE_DIRS = new ArrayList<String>();
 

@@ -5,7 +5,7 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.vclass;
+package com.alibaba.hotswap.processor.front.vclass;
 
 import org.objectweb.asm.ClassVisitor;
 

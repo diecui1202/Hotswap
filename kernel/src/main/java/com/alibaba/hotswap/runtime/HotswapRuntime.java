@@ -37,6 +37,10 @@ public class HotswapRuntime {
         return getClassMeta(className).loadedBytes;
     }
 
+    public static Class<?> getVClass(String className) {
+        return getClassMeta(className).vClass;
+    }
+
     public static ClassMeta getClassMeta(String className) {
         className = HotswapUtil.getInternalClassName(className);
 
@@ -50,6 +54,9 @@ public class HotswapRuntime {
     }
 
     public static void updateClassMeta(String className, File classFile) {
+        if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
+            return;
+        }
         ClassMeta meta = getClassMeta(className);
         meta.name = HotswapUtil.getInternalClassName(className);
         meta.path = classFile.getAbsolutePath();
@@ -57,16 +64,25 @@ public class HotswapRuntime {
     }
 
     public static void updateClassMetaClass(String className, Class<?> clazz) {
+        if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
+            return;
+        }
         ClassMeta meta = getClassMeta(className);
         meta.clazz = clazz;
     }
 
     public static void setClassInitialized(String className) {
+        if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
+            return;
+        }
         ClassMeta classMeta = getClassMeta(className);
         classMeta.initialized = true;
     }
 
     public static boolean getClassInitialized(String className) {
+        if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
+            return false;
+        }
         ClassMeta classMeta = getClassMeta(className);
         return classMeta != null && classMeta.initialized;
     }
