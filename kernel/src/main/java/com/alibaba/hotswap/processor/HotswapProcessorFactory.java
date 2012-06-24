@@ -9,7 +9,6 @@ package com.alibaba.hotswap.processor;
 
 import java.io.PrintWriter;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,14 +90,12 @@ public class HotswapProcessorFactory {
                 try {
                     ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
                     classMeta.loadedBytes = vclassBytes;
-                    Class<?> vClass = Thread.currentThread().getContextClassLoader().loadClass(name.replace("/", ".")
-                                                                                                       + HotswapConstants.V_CLASS_PATTERN
-                                                                                                       + classMeta.loadedIndex);
-                    Field[] fields = vClass.getDeclaredFields();
-                    for (Field f : fields) {
-                        System.out.println(f);
-                    }
+                    Class<?> vClass = classMeta.loader.loadClass(name.replace("/", ".")
+                                                                 + HotswapConstants.V_CLASS_PATTERN
+                                                                 + classMeta.loadedIndex);
                     HotswapRuntime.getClassMeta(name).vClass = vClass;
+
+                    System.out.println(classMeta.loader + "\n" + vClass.getClassLoader());
                 } catch (ClassNotFoundException e) {
                     e.printStackTrace();
                 }

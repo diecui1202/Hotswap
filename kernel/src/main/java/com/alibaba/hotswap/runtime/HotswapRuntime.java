@@ -53,6 +53,15 @@ public class HotswapRuntime {
         return meta;
     }
 
+    public static void updateClassMeta(String className, ClassLoader loader) {
+        if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
+            return;
+        }
+
+        ClassMeta meta = getClassMeta(className);
+        meta.loader = loader;
+    }
+
     public static void updateClassMeta(String className, File classFile) {
         if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
             return;

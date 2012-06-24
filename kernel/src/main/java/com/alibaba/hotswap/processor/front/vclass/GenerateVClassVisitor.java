@@ -8,6 +8,8 @@
 package com.alibaba.hotswap.processor.front.vclass;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.commons.RemappingClassAdapter;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
@@ -21,12 +23,17 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
 public class GenerateVClassVisitor extends BaseClassVisitor {
 
     public GenerateVClassVisitor(ClassVisitor cv){
-        super(cv);
-    }
+        super(new RemappingClassAdapter(cv, new Remapper() {
 
-    @Override
-    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        int v = HotswapRuntime.getClassMeta(name).loadedIndex;
-        super.visit(version, access, name + HotswapConstants.V_CLASS_PATTERN + v, signature, superName, interfaces);
+            @Override
+            public String map(String typeName) {
+                if (HotswapRuntime.hasClassMeta(typeName)) {
+                    int v = HotswapRuntime.getClassMeta(typeName).loadedIndex;
+                    return typeName + HotswapConstants.V_CLASS_PATTERN + v;
+                }
+
+                return typeName;
+            }
+        }));
     }
 }

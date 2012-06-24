@@ -38,12 +38,9 @@ public class PrivateGetDeclaredFieldsModifier extends BaseMethodAdapter {
 
             mv.visitInsn(Opcodes.POP2);
             mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "getVClass",
-                               "(Ljava/lang/String;)Ljava/lang/Class;");
             mv.visitVarInsn(Opcodes.ILOAD, 1);
-            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Class", "getDeclaredFields0",
-                               "(Z)[Ljava/lang/reflect/Field;");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ReflectHelper.class),
+                               "privateGetDeclaredFields0", "(Ljava/lang/Class;Z)[Ljava/lang/reflect/Field;");
             Label end = new Label();
             mv.visitJumpInsn(Opcodes.GOTO, end);
             mv.visitLabel(old);

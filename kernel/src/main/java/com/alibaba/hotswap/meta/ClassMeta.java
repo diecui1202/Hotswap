@@ -27,6 +27,7 @@ public class ClassMeta {
     public boolean                initialized         = false;
     public Class<?>               clazz;
     public Class<?>               vClass;
+    public ClassLoader            loader;
 
     // Class's fields
     public Map<String, FieldMeta> fieldMetas          = new HashMap<String, FieldMeta>();

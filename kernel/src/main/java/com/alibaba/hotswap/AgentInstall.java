@@ -22,7 +22,7 @@ import org.objectweb.asm.util.TraceClassVisitor;
 import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.exception.HotswapException;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
-import com.alibaba.hotswap.processor.jdk.JDKClassProcessorFactory;
+import com.alibaba.hotswap.processor.jdk.JdkClassProcessorFactory;
 import com.alibaba.hotswap.reload.ReloadChecker;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
@@ -36,7 +36,7 @@ public class AgentInstall {
 
         parseArgs(agentArgs);
 
-        transformJDKClasses(inst);
+        redifineJdkClasses(inst);
 
         startReloadChecker();
     }
@@ -65,8 +65,8 @@ public class AgentInstall {
         }
     }
 
-    public static void transformJDKClasses(Instrumentation inst) {
-        for (Entry<Class<?>, Class<? extends BaseClassVisitor>> entry : JDKClassProcessorFactory.jdk_class_processor_holder.entrySet()) {
+    public static void redifineJdkClasses(Instrumentation inst) {
+        for (Entry<Class<?>, Class<? extends BaseClassVisitor>> entry : JdkClassProcessorFactory.jdk_class_processor_holder.entrySet()) {
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             ClassVisitor cv = cw;
             String name = entry.getKey().getName();

@@ -36,6 +36,11 @@ public class DefineClassMethodModifier extends MethodVisitor {
         Label old = new Label();
         mv.visitJumpInsn(Opcodes.IFNULL, old);
 
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "updateClassMeta",
+                           "(Ljava/lang/String;Ljava/lang/ClassLoader;)V");
+
         mv.visitVarInsn(Opcodes.ALOAD, 1); // className
         mv.visitInsn(Opcodes.SWAP);
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(CustomerLoadClassBytes.class),

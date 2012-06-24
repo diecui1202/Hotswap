@@ -11,6 +11,7 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
+import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 
@@ -30,7 +31,7 @@ public class FindClassMethodModifier extends MethodVisitor {
         Label normal = new Label();
 
         mv.visitVarInsn(Opcodes.ALOAD, 1);
-        mv.visitLdcInsn("$$V$$");
+        mv.visitLdcInsn(HotswapConstants.V_CLASS_PATTERN);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/String", "indexOf", "(Ljava/lang/String;)I");
         mv.visitInsn(Opcodes.DUP);
         mv.visitJumpInsn(Opcodes.IFLT, normal);
