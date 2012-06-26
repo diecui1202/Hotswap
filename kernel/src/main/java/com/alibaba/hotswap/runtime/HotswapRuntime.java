@@ -27,14 +27,6 @@ public class HotswapRuntime {
     private static Instrumentation           inst;
     public static HashMap<String, ClassMeta> CLASS_METAS = new HashMap<String, ClassMeta>();
 
-    public static boolean isUnderHotswapControlled(Object obj) {
-        String className = obj.getClass().getName();
-        if (HotswapRuntime.hasClassMeta(className)) {
-            return true;
-        }
-        return false;
-    }
-
     public static boolean hasClassMeta(String className) {
         className = HotswapUtil.getInternalClassName(className);
         ClassMeta meta = CLASS_METAS.get(className);

@@ -13,7 +13,9 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
+import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
+import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 
 /**
  * @author zhuyong 2012-6-24
@@ -44,6 +46,29 @@ public class ReflectHelper {
         }
 
         return fields;
+    }
+
+    public static boolean isFieldInHotswapHolder(Object obj, Field field) {
+        String className = obj.getClass().getName();
+        if (HotswapRuntime.hasClassMeta(className)) {
+            // field holder ---> true
+            if (field.getName().equals(HotswapConstants.FIELD_HOLDER)
+                || field.getName().equals(HotswapConstants.STATIC_FIELD_HOLDER)) {
+                return false;
+            }
+            ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
+            String fk = field.getModifiers() + Type.getInternalName(field.getDeclaringClass());
+            FieldMeta fm = classMeta.getFieldMeta(fk);
+            if (fm != null && !fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
+                return false;
+            } else {
+                
+            }
+
+            return true;
+        }
+
+        return false;
     }
 
     @SuppressWarnings("unchecked")
