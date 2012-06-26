@@ -12,6 +12,7 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.jdk.classloader.modifier.DefineClassMethodModifier;
 
 /**
  * The classloader interceptor for custom loading
@@ -38,7 +39,7 @@ public class ClassLoaderVisitor extends BaseClassVisitor {
 
         if (name.equals("defineClass")
             && desc.equals("(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;")) {
-            return new DefineClassMethodModifier(mv);
+            return new DefineClassMethodModifier(mv, access, name, desc);
         }
 
         return mv;

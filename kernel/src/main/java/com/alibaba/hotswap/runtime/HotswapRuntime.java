@@ -27,18 +27,26 @@ public class HotswapRuntime {
     private static Instrumentation           inst;
     public static HashMap<String, ClassMeta> CLASS_METAS = new HashMap<String, ClassMeta>();
 
+    public static boolean isUnderHotswapControlled(Object obj) {
+        String className = obj.getClass().getName();
+        if (HotswapRuntime.hasClassMeta(className)) {
+            return true;
+        }
+        return false;
+    }
+
     public static boolean hasClassMeta(String className) {
         className = HotswapUtil.getInternalClassName(className);
         ClassMeta meta = CLASS_METAS.get(className);
         return meta != null;
     }
 
-    public static byte[] getVClassBytes(String className) {
-        return getClassMeta(className).loadedBytes;
+    public static String getVClassName(String className) {
+        return getClassMeta(className).vClassName;
     }
 
-    public static Class<?> getVClass(String className) {
-        return getClassMeta(className).vClass;
+    public static byte[] getVClassBytes(String className) {
+        return getClassMeta(className).loadedBytes;
     }
 
     public static ClassMeta getClassMeta(String className) {

@@ -34,7 +34,6 @@ public class FieldNodeHolderVisitor extends BaseClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
         classMeta = HotswapRuntime.getClassMeta(className);
-        classMeta.reset();
     }
 
     @Override

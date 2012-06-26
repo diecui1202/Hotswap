@@ -62,7 +62,9 @@ public class HotswapProcessorFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static byte[] process(String name, byte[] bytes) {
+    public static byte[] process(String name, byte[] bytes) throws ClassNotFoundException {
+        ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
+        classMeta.reset();
 
         byte[] classBytes = bytes;
         for (int i = 0; i < hotswap_processor_holder.size(); i++) {
@@ -87,17 +89,11 @@ public class HotswapProcessorFactory {
             if (i == 0) {
                 // v class
                 byte[] vclassBytes = cw.toByteArray();
-                try {
-                    ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
-                    classMeta.loadedBytes = vclassBytes;
-                    Class<?> vClass = classMeta.loader.loadClass(name.replace("/", ".")
-                                                                 + HotswapConstants.V_CLASS_PATTERN
-                                                                 + classMeta.loadedIndex);
-                    HotswapRuntime.getClassMeta(name).vClass = vClass;
-
-                    System.out.println(classMeta.loader + "\n" + vClass.getClassLoader());
-                } catch (ClassNotFoundException e) {
-                    e.printStackTrace();
+                classMeta.loadedBytes = vclassBytes;
+                classMeta.vClassName = name.replace("/", ".") + HotswapConstants.V_CLASS_PATTERN
+                                       + classMeta.loadedIndex;
+                synchronized (classMeta) {
+                    classMeta.vClass = classMeta.loader.loadClass(classMeta.vClassName);
                 }
             } else {
                 classBytes = cw.toByteArray();

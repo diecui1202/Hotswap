@@ -17,9 +17,12 @@ public class BaseMethodAdapter extends GeneratorAdapter {
 
     protected String className;
 
+    public BaseMethodAdapter(MethodVisitor mv, int access, String name, String desc){
+        super(mv, access, name, desc);
+    }
+
     public BaseMethodAdapter(MethodVisitor mv, int access, String name, String desc, String className){
         super(mv, access, name, desc);
-
         this.className = className;
     }
 }

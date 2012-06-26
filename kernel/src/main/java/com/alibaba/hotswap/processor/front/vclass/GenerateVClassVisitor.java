@@ -14,6 +14,7 @@ import org.objectweb.asm.commons.RemappingClassAdapter;
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
+import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 
 /**
  * Generate V class
@@ -26,14 +27,26 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
         super(new RemappingClassAdapter(cv, new Remapper() {
 
             @Override
-            public String map(String typeName) {
-                if (HotswapRuntime.hasClassMeta(typeName)) {
+            public String mapType(String typeName) {
+                if (HotswapRuntime.hasClassMeta(typeName) && typeName.equals(HotswapThreadLocalUtil.getClassName())) {
                     int v = HotswapRuntime.getClassMeta(typeName).loadedIndex;
                     return typeName + HotswapConstants.V_CLASS_PATTERN + v;
+                } else {
+                    return typeName;
                 }
-
-                return typeName;
             }
         }));
+    }
+
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        HotswapThreadLocalUtil.setClassName(name);
+        super.visit(version, access, name, signature, superName, interfaces);
+    }
+
+    @Override
+    public void visitEnd() {
+        super.visitEnd();
+        HotswapThreadLocalUtil.setClassName(null);
     }
 }

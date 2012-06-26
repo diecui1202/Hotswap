@@ -11,6 +11,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.jdk.classloader.modifier.FindClassMethodModifier;
 
 /**
  * @author zhuyong 2012-6-18

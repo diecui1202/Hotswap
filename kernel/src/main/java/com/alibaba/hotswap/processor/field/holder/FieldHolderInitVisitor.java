@@ -26,7 +26,7 @@ public class FieldHolderInitVisitor extends BaseClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         if (name.equals(HotswapConstants.INIT)) {
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-            return new FieldHolderInitModifier(mv, access, name, desc, className);
+            return new FieldHolderInitModifier(mv, access, name, desc);
         }
         return super.visitMethod(access, name, desc, signature, exceptions);
     }

@@ -5,12 +5,13 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.classloader;
+package com.alibaba.hotswap.processor.jdk.classloader.modifier;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
+import org.objectweb.asm.commons.GeneratorAdapter;
 
 import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.loader.CustomerLoadClassBytes;
@@ -19,10 +20,10 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
 /**
  * @author yong.zhuy 2012-5-21 15:41:49
  */
-public class DefineClassMethodModifier extends MethodVisitor {
+public class DefineClassMethodModifier extends GeneratorAdapter {
 
-    public DefineClassMethodModifier(MethodVisitor mv){
-        super(Opcodes.ASM4, mv);
+    public DefineClassMethodModifier(MethodVisitor mv, int access, String name, String desc){
+        super(Opcodes.ASM4, mv, access, name, desc);
     }
 
     @Override

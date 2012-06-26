@@ -11,9 +11,10 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.jdk.reflect.modifier.PrivateGetDeclaredFieldsModifier;
 
 /**
- * @author lamp 2012-6-17 18:08:35
+ * @author zhuyong 2012-6-17 18:08:35
  */
 public class JdkClassVisitor extends BaseClassVisitor {
 
@@ -27,7 +28,7 @@ public class JdkClassVisitor extends BaseClassVisitor {
         if (name.equals("privateGetDeclaredFields")) {
             return new PrivateGetDeclaredFieldsModifier(mv, access, name, desc, className);
         }
+
         return mv;
     }
-
 }

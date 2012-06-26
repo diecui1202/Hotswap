@@ -5,15 +5,16 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.reflect;
+package com.alibaba.hotswap.processor.jdk.reflect.modifier;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
+import com.alibaba.hotswap.processor.jdk.reflect.ReflectHelper;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
-import com.sun.xml.internal.ws.org.objectweb.asm.Type;
 
 /**
  * @author zhuyong 2012-6-17 18:33:19

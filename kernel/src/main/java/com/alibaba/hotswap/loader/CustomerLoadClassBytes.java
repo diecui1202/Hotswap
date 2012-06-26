@@ -9,7 +9,6 @@ package com.alibaba.hotswap.loader;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 
 import com.alibaba.hotswap.exception.HotswapException;
 import com.alibaba.hotswap.processor.HotswapProcessorFactory;
@@ -37,8 +36,8 @@ public class CustomerLoadClassBytes {
                 throw new IllegalStateException("read class bytes error, len == 0");
             }
 
-            return HotswapProcessorFactory.process(name, classByte);
-        } catch (IOException e) {
+            return HotswapProcessorFactory.process(name.replace("/", "."), classByte);
+        } catch (Exception e) {
             throw new HotswapException("load class error, name: " + name, e);
         }
     }

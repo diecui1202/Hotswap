@@ -41,7 +41,7 @@ public class ClinitVisitor extends BaseClassVisitor {
 
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-            return new ClinitModifier(mv, access, name, desc, className);
+            return new ClinitModifier(mv, access, name, desc);
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
