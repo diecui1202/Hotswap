@@ -24,8 +24,8 @@ import com.alibaba.hotswap.util.HotswapFieldUtil;
  */
 public class FieldAccessModifier extends BaseMethodAdapter {
 
-    public FieldAccessModifier(MethodVisitor mv, int access, String name, String desc){
-        super(mv, access, name, desc);
+    public FieldAccessModifier(MethodVisitor mv, int access, String name, String desc, String className){
+        super(mv, access, name, desc, className);
     }
 
     @Override

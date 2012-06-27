@@ -23,8 +23,8 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  */
 public class ClinitModifier extends BaseMethodAdapter {
 
-    public ClinitModifier(MethodVisitor mv, int access, String name, String desc){
-        super(mv, access, name, desc);
+    public ClinitModifier(MethodVisitor mv, int access, String name, String desc, String className){
+        super(mv, access, name, desc, className);
     }
 
     @Override

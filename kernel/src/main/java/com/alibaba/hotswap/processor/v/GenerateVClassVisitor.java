@@ -5,14 +5,15 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.field.holder;
+package com.alibaba.hotswap.processor.v;
 
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.commons.Remapper;
+import org.objectweb.asm.commons.RemappingClassAdapter;
 import org.objectweb.asm.tree.FieldNode;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
@@ -21,24 +22,36 @@ import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
-import com.alibaba.hotswap.util.HotswapUtil;
+import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 
 /**
- * @author zhuyong 2012-6-16 08:52:55
+ * Generate V class
+ * 
+ * @author zhuyong 2012-6-18
  */
-public class FieldAheadVisitor extends BaseClassVisitor {
+public class GenerateVClassVisitor extends BaseClassVisitor {
 
-    private ClassMeta classMeta;
+    public GenerateVClassVisitor(ClassVisitor cv){
+        super(new RemappingClassAdapter(cv, new Remapper() {
 
-    public FieldAheadVisitor(ClassVisitor cv){
-        super(cv);
+            @Override
+            public String mapType(String typeName) {
+                if (HotswapRuntime.hasClassMeta(typeName) && typeName.equals(HotswapThreadLocalUtil.getClassName())) {
+                    int v = HotswapRuntime.getClassMeta(typeName).loadedIndex;
+                    return typeName + HotswapConstants.V_CLASS_PATTERN + v;
+                } else {
+                    return typeName;
+                }
+            }
+        }));
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        HotswapThreadLocalUtil.setClassName(name);
         super.visit(version, access, name, signature, superName, interfaces);
 
-        classMeta = HotswapRuntime.getClassMeta(className);
+        ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
 
         if (!classMeta.initialized) {
             // First load
@@ -59,13 +72,10 @@ public class FieldAheadVisitor extends BaseClassVisitor {
                         // Primary field(may change annotation/signature) or change from other field
                         loadedFN.accept(cv);
                         loadedFieldNodes.remove(key);
-                        // update loadedIndex
-                        classMeta.putFieldMeta(classMeta.getFieldMeta(key));
                     } else {
                         primaryFN.accept(cv);
                     }
                 } else {
-                    // This primary field is removed, so do not change loadedIndex
                     primaryFN.accept(cv);
                 }
             }
@@ -79,20 +89,19 @@ public class FieldAheadVisitor extends BaseClassVisitor {
 
                 if (fm2 == null) {
                     // This is a new field
-                    classMeta.addFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
+                    fn.accept(cv);
                 } else {
                     if (classMeta.primaryFieldKeyList.contains(fieldKey)) {
                         // It's a primary field
                         if (fn.access == fm2.access) {
-                            // An exist field
-                            classMeta.putFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
+
                         } else {
                             // Modified field, alias it
                             fn.name = HotswapConstants.PREFIX_FIELD_ALIAS + fn.name;
-                            classMeta.addFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
+                            fn.accept(cv);
                         }
                     } else {
-                        classMeta.putFieldMeta(fn.access, fn.name, fn.desc, fn.signature, fn.value);
+                        fn.accept(cv);
                     }
                 }
             }
@@ -100,18 +109,16 @@ public class FieldAheadVisitor extends BaseClassVisitor {
     }
 
     @Override
+    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+        if (name.equals(HotswapConstants.CLINIT)) {
+            return null;
+        }
+        return super.visitMethod(access, name, desc, signature, exceptions);
+    }
+
+    @Override
     public void visitEnd() {
         super.visitEnd();
-
-        Iterator<Entry<String, FieldMeta>> iter = classMeta.fieldMetas.entrySet().iterator();
-        while (iter.hasNext()) {
-            Entry<String, FieldMeta> entry = iter.next();
-            FieldMeta fm = entry.getValue();
-            if (classMeta.loadedIndex > fm.loadedIndex && !classMeta.primaryFieldKeyList.contains(fm.getKey())) {
-                iter.remove();
-            }
-        }
-
-        HotswapUtil.sysout(classMeta);
+        HotswapThreadLocalUtil.setClassName(null);
     }
 }

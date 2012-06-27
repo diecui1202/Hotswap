@@ -25,6 +25,6 @@ public class FieldAccessVisitor extends BaseClassVisitor {
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-        return new FieldAccessModifier(mv, access, name, desc);
+        return new FieldAccessModifier(mv, access, name, desc, className);
     }
 }

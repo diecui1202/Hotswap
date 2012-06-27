@@ -28,7 +28,7 @@ import com.alibaba.hotswap.processor.field.holder.FieldHolderInitVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldHolderVisitor;
 import com.alibaba.hotswap.processor.front.FieldNodeHolderVisitor;
 import com.alibaba.hotswap.processor.front.compile.CompilerErrorVisitor;
-import com.alibaba.hotswap.processor.front.vclass.GenerateVClassVisitor;
+import com.alibaba.hotswap.processor.v.GenerateVClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
@@ -37,17 +37,22 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
 public class HotswapProcessorFactory {
 
     private static final List<List<Class<? extends BaseClassVisitor>>> hotswap_processor_holder = new ArrayList<List<Class<? extends BaseClassVisitor>>>();
+    private static int                                                 v_class_processor_index;
 
     static {
         // Do not change these processors' order!!!
         int index = 0;
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(CompilerErrorVisitor.class);
-        hotswap_processor_holder.get(index).add(GenerateVClassVisitor.class);
 
         index++;
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(FieldNodeHolderVisitor.class);
+
+        index++;
+        v_class_processor_index = index;
+        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
+        hotswap_processor_holder.get(index).add(GenerateVClassVisitor.class);
 
         index++;
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
@@ -71,7 +76,8 @@ public class HotswapProcessorFactory {
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
 
             ClassVisitor cv = cw;
-            if (HotswapConfiguration.TRACE != null && name.indexOf(HotswapConfiguration.TRACE) >= 0) {
+            if (HotswapConfiguration.TRACE != null && name.indexOf(HotswapConfiguration.TRACE) >= 0
+                && (i == hotswap_processor_holder.size() - 1 || i == v_class_processor_index)) {
                 cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
             }
 
@@ -86,7 +92,7 @@ public class HotswapProcessorFactory {
 
             ClassReader cr = new ClassReader(classBytes);
             cr.accept(cv, ClassReader.EXPAND_FRAMES);
-            if (i == 0) {
+            if (i == v_class_processor_index) {
                 // v class
                 byte[] vclassBytes = cw.toByteArray();
                 classMeta.loadedBytes = vclassBytes;

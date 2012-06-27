@@ -8,7 +8,6 @@
 package com.alibaba.hotswap;
 
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.lang.instrument.ClassDefinition;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
@@ -17,7 +16,6 @@ import java.util.Map.Entry;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.util.TraceClassVisitor;
 
 import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.exception.HotswapException;
@@ -70,10 +68,6 @@ public class AgentInstall {
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
             ClassVisitor cv = cw;
             String name = entry.getKey().getName();
-
-            if (HotswapConfiguration.TRACE != null && name.equals(HotswapConfiguration.TRACE)) {
-                cv = new TraceClassVisitor(cv, new PrintWriter(System.out));
-            }
 
             try {
                 Constructor<? extends BaseClassVisitor> c = entry.getValue().getConstructor(ClassVisitor.class);

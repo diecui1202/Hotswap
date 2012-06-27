@@ -20,8 +20,8 @@ import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
  */
 public class FieldHolderInitModifier extends BaseMethodAdapter {
 
-    public FieldHolderInitModifier(MethodVisitor mv, int access, String name, String desc){
-        super(mv, access, name, desc);
+    public FieldHolderInitModifier(MethodVisitor mv, int access, String name, String desc, String className){
+        super(mv, access, name, desc, className);
     }
 
     @Override
