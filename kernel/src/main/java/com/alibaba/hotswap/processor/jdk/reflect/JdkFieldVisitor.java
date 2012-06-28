@@ -11,11 +11,16 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.jdk.reflect.modifier.DeclaredAnnotationsModifier;
 import com.alibaba.hotswap.processor.jdk.reflect.modifier.GetXModifier;
 import com.alibaba.hotswap.processor.jdk.reflect.modifier.SetXModifier;
 
 /**
- * Add Field get[X]?() support
+ * <pre>
+ * 1. Add Field get[X]?() support
+ * 2. Add Field set[X]?() support
+ * 3. Add declaredAnnotations() support
+ * </pre>
  * 
  * @author zhuyong 2012-6-26
  */
@@ -51,6 +56,10 @@ public class JdkFieldVisitor extends BaseClassVisitor {
             || (name.equals("setFloat") && desc.equals("(Ljava/lang/Object;F)V"))
             || (name.equals("setDouble") && desc.equals("(Ljava/lang/Object;D)V"))) {
             return new SetXModifier(mv, access, name, desc);
+        }
+
+        if (name.equals("declaredAnnotations") && desc.equals("()Ljava/util/Map;")) {
+            return new DeclaredAnnotationsModifier(mv, access, name, desc);
         }
 
         return mv;

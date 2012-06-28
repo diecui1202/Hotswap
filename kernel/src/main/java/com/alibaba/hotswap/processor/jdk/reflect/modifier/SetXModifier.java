@@ -14,15 +14,18 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.ReflectFieldHelper;
+import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
 
 /**
  * @author zhuyong 2012-6-27
  */
 public class SetXModifier extends BaseMethodAdapter {
 
+    private String desc;
+
     public SetXModifier(MethodVisitor mv, int access, String name, String desc){
         super(mv, access, name, desc);
+        this.desc = desc;
     }
 
     @Override
@@ -31,7 +34,7 @@ public class SetXModifier extends BaseMethodAdapter {
 
         loadArg(0);
         loadThis();
-        invokeStatic(Type.getType(ReflectFieldHelper.class),
+        invokeStatic(Type.getType(FieldReflectHelper.class),
                      new Method("isInHotswapFieldHolder", "(Ljava/lang/Object;Ljava/lang/reflect/Field;)Z"));
         Label old = newLabel();
         ifZCmp(EQ, old);
@@ -39,9 +42,9 @@ public class SetXModifier extends BaseMethodAdapter {
         loadArg(0);
         loadThis();
         loadArg(1);
-        box(Type.getType(Object.class));
+        box(Type.getArgumentTypes(desc)[1]);
 
-        invokeStatic(Type.getType(ReflectFieldHelper.class),
+        invokeStatic(Type.getType(FieldReflectHelper.class),
                      new Method("setHotswapFieldHolderValue",
                                 "(Ljava/lang/Object;Ljava/lang/reflect/Field;Ljava/lang/Object;)V"));
 

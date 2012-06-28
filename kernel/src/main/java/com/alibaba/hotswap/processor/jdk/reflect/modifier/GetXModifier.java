@@ -13,7 +13,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.ReflectFieldHelper;
+import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
 
 /**
  * @author zhuyong 2012-6-26
@@ -33,7 +33,7 @@ public class GetXModifier extends BaseMethodAdapter {
 
         loadArg(0);
         loadThis();
-        invokeStatic(Type.getType(ReflectFieldHelper.class),
+        invokeStatic(Type.getType(FieldReflectHelper.class),
                      new Method("isInHotswapFieldHolder", "(Ljava/lang/Object;Ljava/lang/reflect/Field;)Z"));
         Label old = newLabel();
         ifZCmp(EQ, old);
@@ -41,7 +41,7 @@ public class GetXModifier extends BaseMethodAdapter {
         loadArg(0);
         loadThis();
 
-        invokeStatic(Type.getType(ReflectFieldHelper.class),
+        invokeStatic(Type.getType(FieldReflectHelper.class),
                      new Method("getHotswapFieldHolderValue",
                                 "(Ljava/lang/Object;Ljava/lang/reflect/Field;)Ljava/lang/Object;"));
         unbox(Type.getReturnType(desc));

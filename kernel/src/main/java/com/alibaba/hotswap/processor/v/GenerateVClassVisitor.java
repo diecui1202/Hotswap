@@ -12,8 +12,6 @@ import java.util.Map;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.commons.Remapper;
-import org.objectweb.asm.commons.RemappingClassAdapter;
 import org.objectweb.asm.tree.FieldNode;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
@@ -22,7 +20,6 @@ import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
-import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 
 /**
  * Generate V class
@@ -32,27 +29,17 @@ import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 public class GenerateVClassVisitor extends BaseClassVisitor {
 
     public GenerateVClassVisitor(ClassVisitor cv){
-        super(new RemappingClassAdapter(cv, new Remapper() {
-
-            @Override
-            public String mapType(String typeName) {
-                if (HotswapRuntime.hasClassMeta(typeName) && typeName.equals(HotswapThreadLocalUtil.getClassName())) {
-                    int v = HotswapRuntime.getClassMeta(typeName).loadedIndex;
-                    return typeName + HotswapConstants.V_CLASS_PATTERN + v;
-                } else {
-                    return typeName;
-                }
-            }
-        }));
+        super(cv);
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        HotswapThreadLocalUtil.setClassName(name);
-        super.visit(version, access, name, signature, superName, interfaces);
+        int v = HotswapRuntime.getClassMeta(name).loadedIndex;
+        String vName = name + HotswapConstants.V_CLASS_PATTERN + v;
+        super.visit(version, access, vName, signature, superName, interfaces);
+        className = name;
 
         ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
-
         if (!classMeta.initialized) {
             // First load
             for (String key : classMeta.primaryFieldKeyList) {
@@ -119,6 +106,5 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
     @Override
     public void visitEnd() {
         super.visitEnd();
-        HotswapThreadLocalUtil.setClassName(null);
     }
 }

@@ -34,7 +34,9 @@ public class ReloadChecker implements Runnable {
                     File f = new File(meta.path);
                     if (f.lastModified() > meta.lastModified) {
                         try {
-                            HotswapRuntime.redefineClass(meta);
+                            synchronized (meta) {
+                                HotswapRuntime.redefineClass(meta);
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }

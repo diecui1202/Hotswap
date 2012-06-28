@@ -12,7 +12,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.ReflectFieldHelper;
+import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
 
 /**
  * Filter hotswap field holder
@@ -28,7 +28,7 @@ public class GetDeclaredFieldsModifier extends BaseMethodAdapter {
     @Override
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.ARETURN) {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ReflectFieldHelper.class),
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(FieldReflectHelper.class),
                                "filterHotswapFields", "([Ljava/lang/reflect/Field;)[Ljava/lang/reflect/Field;");
         }
         super.visitInsn(opcode);

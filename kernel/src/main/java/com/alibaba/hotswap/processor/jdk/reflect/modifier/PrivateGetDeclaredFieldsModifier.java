@@ -13,7 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.ReflectFieldHelper;
+import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
@@ -40,7 +40,7 @@ public class PrivateGetDeclaredFieldsModifier extends BaseMethodAdapter {
             mv.visitInsn(Opcodes.POP2);
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             mv.visitVarInsn(Opcodes.ILOAD, 1);
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ReflectFieldHelper.class),
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(FieldReflectHelper.class),
                                "privateGetDeclaredFields0", "(Ljava/lang/Class;Z)[Ljava/lang/reflect/Field;");
             Label end = new Label();
             mv.visitJumpInsn(Opcodes.GOTO, end);
