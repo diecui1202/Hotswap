@@ -25,10 +25,18 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
 public class ClinitVisitor extends BaseClassVisitor {
 
     private boolean hasClinitMethod;
+    private boolean isInterface;
 
     public ClinitVisitor(ClassVisitor cv){
         super(cv);
         hasClinitMethod = false;
+        isInterface = false;
+    }
+
+    @Override
+    public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
+        super.visit(version, access, name, signature, superName, interfaces);
+        isInterface = (access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE;
     }
 
     @Override
@@ -50,7 +58,7 @@ public class ClinitVisitor extends BaseClassVisitor {
     @Override
     public void visitEnd() {
         // If no clinit method, then add it
-        if (!hasClinitMethod) {
+        if (!hasClinitMethod && !isInterface) {
             int access = Opcodes.ACC_STATIC + Opcodes.ACC_PUBLIC;
             String name = HotswapConstants.HOTSWAP_CLINIT;
             String desc = "()V";
@@ -71,8 +79,9 @@ public class ClinitVisitor extends BaseClassVisitor {
                 mv.visitMaxs(2, 0);
                 mv.visitEnd();
             }
+
+            generateClinit();
         }
-        generateClinit();
 
         super.visitEnd();
     }

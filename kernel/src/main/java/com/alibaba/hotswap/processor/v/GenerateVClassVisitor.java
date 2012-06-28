@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.FieldNode;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
@@ -36,6 +37,13 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         int v = HotswapRuntime.getClassMeta(name).loadedIndex;
         String vName = name + HotswapConstants.V_CLASS_PATTERN + v;
+
+        if ((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE
+            && (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT) {
+            // If it is a interface, then transformer it to class
+            access = access - Opcodes.ACC_INTERFACE;
+        }
+
         super.visit(version, access, vName, signature, superName, interfaces);
         className = name;
 
@@ -97,9 +105,6 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        if (name.equals(HotswapConstants.CLINIT)) {
-            return null;
-        }
         return super.visitMethod(access, name, desc, signature, exceptions);
     }
 
