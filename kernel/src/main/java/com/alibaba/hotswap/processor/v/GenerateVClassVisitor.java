@@ -37,9 +37,9 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         int v = HotswapRuntime.getClassMeta(name).loadedIndex;
         String vName = name + HotswapConstants.V_CLASS_PATTERN + v;
+        boolean isInterface = ((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE);
 
-        if ((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE
-            && (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT) {
+        if (isInterface && (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT) {
             // If it is a interface, then transformer it to class
             access = access - Opcodes.ACC_INTERFACE;
         }
@@ -48,6 +48,7 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
         className = name;
 
         ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
+        classMeta.isInterface = isInterface;
         if (!classMeta.initialized) {
             // First load
             for (String key : classMeta.primaryFieldKeyList) {

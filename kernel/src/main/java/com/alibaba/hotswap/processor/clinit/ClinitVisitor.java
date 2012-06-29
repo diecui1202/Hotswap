@@ -36,12 +36,12 @@ public class ClinitVisitor extends BaseClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
-        isInterface = (access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE;
+        isInterface = ((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE);
     }
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        if (name.equals(HotswapConstants.CLINIT)) {
+        if (name.equals(HotswapConstants.CLINIT) && !isInterface) {
             hasClinitMethod = true;
 
             name = HotswapConstants.HOTSWAP_CLINIT;
@@ -49,7 +49,13 @@ public class ClinitVisitor extends BaseClassVisitor {
 
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
 
-            return new ClinitModifier(mv, access, name, desc, className);
+            return new ClinitModifier(mv, access, name, desc, className, isInterface);
+        } else if (name.equals(HotswapConstants.CLINIT) && isInterface) {
+            hasClinitMethod = true;
+
+            MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+
+            return new ClinitModifier(mv, access, name, desc, className, isInterface);
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
         }
@@ -81,6 +87,8 @@ public class ClinitVisitor extends BaseClassVisitor {
             }
 
             generateClinit();
+        } else if (!hasClinitMethod && isInterface) {
+            generateEmptyClinit();
         }
 
         super.visitEnd();
@@ -95,6 +103,24 @@ public class ClinitVisitor extends BaseClassVisitor {
             clinit.visitCode();
 
             clinit.visitMethodInsn(Opcodes.INVOKESTATIC, className, HotswapConstants.HOTSWAP_CLINIT, "()V");
+            clinit.visitInsn(Opcodes.RETURN);
+            clinit.visitMaxs(0, 0);
+            clinit.visitEnd();
+        }
+    }
+
+    /**
+     * Generate <code>&lt;clinit&gt;</code> method with empty body
+     */
+    private void generateEmptyClinit() {
+        MethodVisitor clinit = cv.visitMethod(Opcodes.ACC_STATIC, HotswapConstants.CLINIT, "()V", null, null);
+        if (clinit != null) {
+            clinit.visitCode();
+
+            clinit.visitLdcInsn(className);
+            clinit.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),
+                                   "setClassInitialized", "(Ljava/lang/String;)V");
+
             clinit.visitInsn(Opcodes.RETURN);
             clinit.visitMaxs(0, 0);
             clinit.visitEnd();

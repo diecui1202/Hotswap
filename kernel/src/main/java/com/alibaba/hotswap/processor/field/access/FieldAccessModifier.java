@@ -24,13 +24,16 @@ import com.alibaba.hotswap.util.HotswapFieldUtil;
  */
 public class FieldAccessModifier extends BaseMethodAdapter {
 
+    private String name;
+
     public FieldAccessModifier(MethodVisitor mv, int access, String name, String desc, String className){
         super(mv, access, name, desc, className);
+        this.name = name;
     }
 
     @Override
     public void visitFieldInsn(int opcode, String owner, String name, String desc) {
-        if (HotswapRuntime.getClassInitialized(className) && HotswapRuntime.hasClassMeta(owner)
+        if (HotswapRuntime.hasClassMeta(owner) && HotswapRuntime.getClassInitialized(className)
             && !name.equals(HotswapConstants.STATIC_FIELD_HOLDER) && !name.equals(HotswapConstants.FIELD_HOLDER)) {
 
             ClassMeta classMeta = HotswapRuntime.getClassMeta(owner);

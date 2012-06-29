@@ -25,6 +25,7 @@ public class ClassMeta {
     public String                 path;
     public long                   lastModified;
     public boolean                initialized         = false;
+    public boolean                isInterface         = false;
     public Class<?>               clazz;
     public Class<?>               vClass;
     public String                 vClassName;

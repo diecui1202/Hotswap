@@ -23,19 +23,24 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  */
 public class ClinitModifier extends BaseMethodAdapter {
 
-    public ClinitModifier(MethodVisitor mv, int access, String name, String desc, String className){
+    private boolean isInterface = false;
+
+    public ClinitModifier(MethodVisitor mv, int access, String name, String desc, String className, boolean isInterface){
         super(mv, access, name, desc, className);
+        this.isInterface = isInterface;
     }
 
     @Override
     public void visitCode() {
         super.visitCode();
-        // initial __hotswap_static_field_holder__
-        mv.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
-        mv.visitInsn(Opcodes.DUP);
-        mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
-        mv.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
-                          "Ljava/util/concurrent/ConcurrentHashMap;");
+        if (!isInterface) {
+            // initial __hotswap_static_field_holder__
+            mv.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
+            mv.visitInsn(Opcodes.DUP);
+            mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
+            mv.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
+                              "Ljava/util/concurrent/ConcurrentHashMap;");
+        }
     }
 
     @Override

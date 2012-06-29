@@ -29,8 +29,10 @@ public class FieldHolderVisitor extends BaseClassVisitor {
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         super.visit(version, access, name, signature, superName, interfaces);
 
-        addFieldHolder();
-        addStaticFieldHolder();
+        if ((access & Opcodes.ACC_INTERFACE) == 0) {
+            addFieldHolder();
+            addStaticFieldHolder();
+        }
     }
 
     @Override
