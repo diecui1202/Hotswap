@@ -24,11 +24,8 @@ import com.alibaba.hotswap.util.HotswapFieldUtil;
  */
 public class FieldAccessModifier extends BaseMethodAdapter {
 
-    private String name;
-
     public FieldAccessModifier(MethodVisitor mv, int access, String name, String desc, String className){
         super(mv, access, name, desc, className);
-        this.name = name;
     }
 
     @Override
@@ -37,13 +34,22 @@ public class FieldAccessModifier extends BaseMethodAdapter {
             && !name.equals(HotswapConstants.STATIC_FIELD_HOLDER) && !name.equals(HotswapConstants.FIELD_HOLDER)) {
 
             ClassMeta classMeta = HotswapRuntime.getClassMeta(owner);
+
             String fmKey = HotswapFieldUtil.getFieldKey(name, desc);
             FieldMeta fm = classMeta.getFieldMeta(fmKey);
+
             if (fm != null && classMeta.primaryFieldKeyList.contains(fmKey) && fm.isDeleted(classMeta.loadedIndex)) {
                 // If this accessed field is primary and deleted, it perhaps is a alias field
                 fm = classMeta.getFieldMeta(HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + fm.name,
                                                                          fm.desc));
             }
+
+            // If it is a interface, then direct to v class
+            if (classMeta.isInterface && (opcode == Opcodes.PUTSTATIC || opcode == Opcodes.GETSTATIC)) {
+                super.visitFieldInsn(opcode, Type.getInternalName(classMeta.vClass), fm.name, fm.desc);
+                return;
+            }
+            // A class
 
             if (fm != null && fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
                 if (opcode == Opcodes.PUTSTATIC) {

@@ -24,7 +24,6 @@ public class ClassMeta {
     public String                 name;
     public String                 path;
     public long                   lastModified;
-    public boolean                initialized         = false;
     public boolean                isInterface         = false;
     public Class<?>               clazz;
     public Class<?>               vClass;
@@ -95,14 +94,18 @@ public class ClassMeta {
         return fm;
     }
 
+    public boolean isLoaded() {
+        return clazz != null;
+    }
+
     public void reset() {
         loadedFieldNodes.clear();
         this.loadedIndex++;
     }
 
     public String toString() {
-        return name + " [" + initialized + "], loadedIndex [" + loadedIndex + "], fieldMeta {" + getFieldMetasString()
-               + "}";
+        return name + " [" + (clazz != null) + "], loadedIndex [" + loadedIndex + "], fieldMeta {"
+               + getFieldMetasString() + "}";
     }
 
     private String getFieldMetasString() {

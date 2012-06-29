@@ -44,53 +44,51 @@ public class FieldReflectHelper {
         String name = clazz.getName();
         ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
 
-        synchronized (classMeta) {
-            Field[] fields = null;
-            if (publicOnly) {
-                fields = classMeta.vClass.getFields();
-            } else {
-                fields = classMeta.vClass.getDeclaredFields();
-            }
+        Field[] fields = null;
+        if (publicOnly) {
+            fields = classMeta.vClass.getFields();
+        } else {
+            fields = classMeta.vClass.getDeclaredFields();
+        }
 
-            try {
-                List<Field> holderFields = new ArrayList<Field>();
-                // Remove field which has been deleted
-                Field clazzField = Field.class.getDeclaredField("clazz");
-                Field nameField = Field.class.getDeclaredField("name");
-                clazzField.setAccessible(true);
-                nameField.setAccessible(true);
+        try {
+            List<Field> holderFields = new ArrayList<Field>();
+            // Remove field which has been deleted
+            Field clazzField = Field.class.getDeclaredField("clazz");
+            Field nameField = Field.class.getDeclaredField("name");
+            clazzField.setAccessible(true);
+            nameField.setAccessible(true);
 
-                for (Field f : fields) {
-                    clazzField.set(f, clazz);
+            for (Field f : fields) {
+                clazzField.set(f, clazz);
 
-                    String fk = HotswapFieldUtil.getFieldKey(f.getName(), Type.getDescriptor(f.getType()));
-                    FieldMeta fm = classMeta.getFieldMeta(fk);
-                    if (!fm.isDeleted(classMeta.loadedIndex)) {
-                        if (fm.isAdded() && f.getName().indexOf(HotswapConstants.PREFIX_FIELD_ALIAS) == 0) {
-                            String fieldName = f.getName().substring(HotswapConstants.PREFIX_FIELD_ALIAS.length());
-                            if (classMeta.getFieldMeta(HotswapFieldUtil.getFieldKey(fieldName,
-                                                                                    Type.getDescriptor(f.getType()))).isDeleted(classMeta.loadedIndex)) {
+                String fk = HotswapFieldUtil.getFieldKey(f.getName(), Type.getDescriptor(f.getType()));
+                FieldMeta fm = classMeta.getFieldMeta(fk);
+                if (!fm.isDeleted(classMeta.loadedIndex)) {
+                    if (fm.isAdded() && f.getName().indexOf(HotswapConstants.PREFIX_FIELD_ALIAS) == 0) {
+                        String fieldName = f.getName().substring(HotswapConstants.PREFIX_FIELD_ALIAS.length());
+                        if (classMeta.getFieldMeta(HotswapFieldUtil.getFieldKey(fieldName,
+                                                                                Type.getDescriptor(f.getType()))).isDeleted(classMeta.loadedIndex)) {
 
-                                nameField.set(f, fieldName);
-                            }
+                            nameField.set(f, fieldName);
                         }
-                        holderFields.add(f);
                     }
+                    holderFields.add(f);
                 }
-                Method getDeclaredFields0Method = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
-                getDeclaredFields0Method.setAccessible(true);
-                Field[] tranformFields = (Field[]) getDeclaredFields0Method.invoke(clazz, publicOnly);
-                for (Field f : tranformFields) {
-                    if (f.getName().equals(HotswapConstants.STATIC_FIELD_HOLDER)
-                        || f.getName().equals(HotswapConstants.FIELD_HOLDER)) {
-                        holderFields.add(f);
-                    }
-                }
-
-                return holderFields.toArray(new Field[] {});
-            } catch (Exception e) {
-                e.printStackTrace();
             }
+            Method getDeclaredFields0Method = Class.class.getDeclaredMethod("getDeclaredFields0", boolean.class);
+            getDeclaredFields0Method.setAccessible(true);
+            Field[] tranformFields = (Field[]) getDeclaredFields0Method.invoke(clazz, publicOnly);
+            for (Field f : tranformFields) {
+                if (f.getName().equals(HotswapConstants.STATIC_FIELD_HOLDER)
+                    || f.getName().equals(HotswapConstants.FIELD_HOLDER)) {
+                    holderFields.add(f);
+                }
+            }
+
+            return holderFields.toArray(new Field[] {});
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         // unreached
@@ -98,32 +96,36 @@ public class FieldReflectHelper {
     }
 
     public static boolean isInHotswapFieldHolder(Object object, Field field) {
-        String className = object.getClass().getName();
+        Class<?> clazz = field.getDeclaringClass();
+        String className = clazz.getName();
         if (HotswapRuntime.hasClassMeta(className)) {
+            // If it is a interface, then direct to v class
+            if (clazz.isInterface()) {
+                return true;
+            }
+
             // field holder ---> true
             if (field.getName().equals(HotswapConstants.FIELD_HOLDER)
                 || field.getName().equals(HotswapConstants.STATIC_FIELD_HOLDER)) {
                 return false;
             }
             ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
-            synchronized (classMeta) {
-                String fk = HotswapFieldUtil.getFieldKey(field.getName(), Type.getDescriptor(field.getType()));
-                FieldMeta fm = classMeta.getFieldMeta(fk);
-                if (fm != null && !fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
-                    // a primary field
-                    return false;
-                } else if (fm != null && !fm.isAdded() && fm.isDeleted(classMeta.loadedIndex)) {
-                    // a primary field, but it has beed deleted, so access alias field
-                    String aliasFK = HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + field.getName(),
-                                                                  Type.getDescriptor(field.getType()));
-                    FieldMeta aliasFM = classMeta.getFieldMeta(aliasFK);
-                    if (aliasFM != null && aliasFM.isAdded() && !aliasFM.isDeleted(classMeta.loadedIndex)) {
-                        return true;
-                    }
-                } else if (fm != null && fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
-                    // new field
+            String fk = HotswapFieldUtil.getFieldKey(field.getName(), Type.getDescriptor(field.getType()));
+            FieldMeta fm = classMeta.getFieldMeta(fk);
+            if (fm != null && !fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
+                // a primary field
+                return false;
+            } else if (fm != null && !fm.isAdded() && fm.isDeleted(classMeta.loadedIndex)) {
+                // a primary field, but it has beed deleted, so access alias field
+                String aliasFK = HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + field.getName(),
+                                                              Type.getDescriptor(field.getType()));
+                FieldMeta aliasFM = classMeta.getFieldMeta(aliasFK);
+                if (aliasFM != null && aliasFM.isAdded() && !aliasFM.isDeleted(classMeta.loadedIndex)) {
                     return true;
                 }
+            } else if (fm != null && fm.isAdded() && !fm.isDeleted(classMeta.loadedIndex)) {
+                // new field
+                return true;
             }
         }
 
@@ -132,20 +134,11 @@ public class FieldReflectHelper {
 
     @SuppressWarnings("unchecked")
     public static Object getHotswapFieldHolderValue(Object object, Field field) {
-        Class<?> clazz = object.getClass();
+        Class<?> clazz = field.getDeclaringClass();
         ClassMeta classMeta = HotswapRuntime.getClassMeta(clazz.getName());
 
-        try {
-            synchronized (classMeta) {
-                ConcurrentHashMap<String, Object> fieldHolder = null;
-                if (Modifier.isStatic(field.getModifiers())) {
-                    fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
-                                                                                                   HotswapConstants.STATIC_FIELD_HOLDER);
-                } else {
-                    fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
-                                                                                                   HotswapConstants.FIELD_HOLDER);
-                }
-                // get field key
+        if (clazz.isInterface()) {
+            try {
                 String fk = HotswapFieldUtil.getFieldKey(field.getName(), Type.getDescriptor(field.getType()));
                 FieldMeta fm = classMeta.getFieldMeta(fk);
                 if (fm != null && !fm.isAdded() && fm.isDeleted(classMeta.loadedIndex)) {
@@ -153,12 +146,39 @@ public class FieldReflectHelper {
                                                                   Type.getDescriptor(field.getType()));
                     FieldMeta aliasFM = classMeta.getFieldMeta(aliasFK);
                     if (aliasFM != null && aliasFM.isAdded() && !aliasFM.isDeleted(classMeta.loadedIndex)) {
-                        fk = aliasFK;
+                        fm = aliasFM;
                     }
                 }
 
-                return fieldHolder.get(fk);
+                return classMeta.vClass.getField(fm.name).get(object);
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
             }
+        }
+
+        try {
+            ConcurrentHashMap<String, Object> fieldHolder = null;
+            if (Modifier.isStatic(field.getModifiers())) {
+                fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
+                                                                                               HotswapConstants.STATIC_FIELD_HOLDER);
+            } else {
+                fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
+                                                                                               HotswapConstants.FIELD_HOLDER);
+            }
+            // get field key
+            String fk = HotswapFieldUtil.getFieldKey(field.getName(), Type.getDescriptor(field.getType()));
+            FieldMeta fm = classMeta.getFieldMeta(fk);
+            if (fm != null && !fm.isAdded() && fm.isDeleted(classMeta.loadedIndex)) {
+                String aliasFK = HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + field.getName(),
+                                                              Type.getDescriptor(field.getType()));
+                FieldMeta aliasFM = classMeta.getFieldMeta(aliasFK);
+                if (aliasFM != null && aliasFM.isAdded() && !aliasFM.isDeleted(classMeta.loadedIndex)) {
+                    fk = aliasFK;
+                }
+            }
+
+            return fieldHolder.get(fk);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -172,29 +192,27 @@ public class FieldReflectHelper {
         ClassMeta classMeta = HotswapRuntime.getClassMeta(clazz.getName());
 
         try {
-            synchronized (classMeta) {
-                ConcurrentHashMap<String, Object> fieldHolder = null;
-                if (Modifier.isStatic(field.getModifiers())) {
-                    fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
-                                                                                                   HotswapConstants.STATIC_FIELD_HOLDER);
-                } else {
-                    fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
-                                                                                                   HotswapConstants.FIELD_HOLDER);
-                }
-                // get field key
-                String fk = HotswapFieldUtil.getFieldKey(field.getName(), Type.getDescriptor(field.getType()));
-                FieldMeta fm = classMeta.getFieldMeta(fk);
-                if (fm != null && !fm.isAdded() && fm.isDeleted(classMeta.loadedIndex)) {
-                    String aliasFK = HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + field.getName(),
-                                                                  Type.getDescriptor(field.getType()));
-                    FieldMeta aliasFM = classMeta.getFieldMeta(aliasFK);
-                    if (aliasFM != null && aliasFM.isAdded() && !aliasFM.isDeleted(classMeta.loadedIndex)) {
-                        fk = aliasFK;
-                    }
-                }
-
-                fieldHolder.put(fk, value);
+            ConcurrentHashMap<String, Object> fieldHolder = null;
+            if (Modifier.isStatic(field.getModifiers())) {
+                fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
+                                                                                               HotswapConstants.STATIC_FIELD_HOLDER);
+            } else {
+                fieldHolder = (ConcurrentHashMap<String, Object>) ReflectionUtil.getFieldValue(object,
+                                                                                               HotswapConstants.FIELD_HOLDER);
             }
+            // get field key
+            String fk = HotswapFieldUtil.getFieldKey(field.getName(), Type.getDescriptor(field.getType()));
+            FieldMeta fm = classMeta.getFieldMeta(fk);
+            if (fm != null && !fm.isAdded() && fm.isDeleted(classMeta.loadedIndex)) {
+                String aliasFK = HotswapFieldUtil.getFieldKey(HotswapConstants.PREFIX_FIELD_ALIAS + field.getName(),
+                                                              Type.getDescriptor(field.getType()));
+                FieldMeta aliasFM = classMeta.getFieldMeta(aliasFK);
+                if (aliasFM != null && aliasFM.isAdded() && !aliasFM.isDeleted(classMeta.loadedIndex)) {
+                    fk = aliasFK;
+                }
+            }
+
+            fieldHolder.put(fk, value);
         } catch (Exception e) {
             e.printStackTrace();
         }

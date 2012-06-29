@@ -40,7 +40,7 @@ public class FieldAheadVisitor extends BaseClassVisitor {
 
         classMeta = HotswapRuntime.getClassMeta(className);
 
-        if (!classMeta.initialized) {
+        if (!classMeta.isLoaded()) {
             // First load
             for (String key : classMeta.primaryFieldKeyList) {
                 classMeta.primaryFieldNodes.get(key).accept(cv);

@@ -30,7 +30,6 @@ public class ClinitVisitor extends BaseClassVisitor {
     public ClinitVisitor(ClassVisitor cv){
         super(cv);
         hasClinitMethod = false;
-        isInterface = false;
     }
 
     @Override
@@ -41,20 +40,16 @@ public class ClinitVisitor extends BaseClassVisitor {
 
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        if (name.equals(HotswapConstants.CLINIT) && !isInterface) {
+        if (name.equals(HotswapConstants.CLINIT)) {
             hasClinitMethod = true;
 
-            name = HotswapConstants.HOTSWAP_CLINIT;
-            access = access + Opcodes.ACC_PUBLIC;
+            if (!isInterface) {
+                // If it is a class, then alias clinit to hotswap_clinit
+                name = HotswapConstants.HOTSWAP_CLINIT;
+                access = access + Opcodes.ACC_PUBLIC;
+            }
 
             MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-
-            return new ClinitModifier(mv, access, name, desc, className, isInterface);
-        } else if (name.equals(HotswapConstants.CLINIT) && isInterface) {
-            hasClinitMethod = true;
-
-            MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-
             return new ClinitModifier(mv, access, name, desc, className, isInterface);
         } else {
             return super.visitMethod(access, name, desc, signature, exceptions);
@@ -64,31 +59,37 @@ public class ClinitVisitor extends BaseClassVisitor {
     @Override
     public void visitEnd() {
         // If no clinit method, then add it
-        if (!hasClinitMethod && !isInterface) {
-            int access = Opcodes.ACC_STATIC + Opcodes.ACC_PUBLIC;
-            String name = HotswapConstants.HOTSWAP_CLINIT;
-            String desc = "()V";
-            MethodVisitor mv = super.visitMethod(access, name, desc, null, null);
-            if (mv != null) {
-                mv.visitCode();
-                mv.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
-                mv.visitInsn(Opcodes.DUP);
-                mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
-                mv.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
-                                  "Ljava/util/concurrent/ConcurrentHashMap;");
+        if (!hasClinitMethod) {
+            if (!isInterface) {
+                int access = Opcodes.ACC_STATIC + Opcodes.ACC_PUBLIC;
+                String name = HotswapConstants.HOTSWAP_CLINIT;
+                String desc = "()V";
+                MethodVisitor mv = super.visitMethod(access, name, desc, null, null);
+                if (mv != null) {
+                    mv.visitCode();
+                    mv.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
+                    mv.visitInsn(Opcodes.DUP);
+                    mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
+                    mv.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
+                                      "Ljava/util/concurrent/ConcurrentHashMap;");
 
-                mv.visitLdcInsn(className);
-                mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),
-                                   "setClassInitialized", "(Ljava/lang/String;)V");
+                    mv.visitLdcInsn(className);
+                    mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),
+                                       "setClassInitialized", "(Ljava/lang/String;)V");
 
-                mv.visitInsn(Opcodes.RETURN);
-                mv.visitMaxs(2, 0);
-                mv.visitEnd();
+                    mv.visitInsn(Opcodes.RETURN);
+                    mv.visitMaxs(2, 0);
+                    mv.visitEnd();
+                }
+
+                generateClinit();
+            } else {
+                generateDefaultClinit();
             }
-
-            generateClinit();
-        } else if (!hasClinitMethod && isInterface) {
-            generateEmptyClinit();
+        } else {
+            if (!isInterface) {
+                generateClinit();
+            }
         }
 
         super.visitEnd();
@@ -110,12 +111,19 @@ public class ClinitVisitor extends BaseClassVisitor {
     }
 
     /**
-     * Generate <code>&lt;clinit&gt;</code> method with empty body
+     * Generate <code>&lt;clinit&gt;</code> method with default body
      */
-    private void generateEmptyClinit() {
+    private void generateDefaultClinit() {
         MethodVisitor clinit = cv.visitMethod(Opcodes.ACC_STATIC, HotswapConstants.CLINIT, "()V", null, null);
+
         if (clinit != null) {
             clinit.visitCode();
+
+            // clinit.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
+            // clinit.visitInsn(Opcodes.DUP);
+            // clinit.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
+            // clinit.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
+            // "Ljava/util/concurrent/ConcurrentHashMap;");
 
             clinit.visitLdcInsn(className);
             clinit.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),

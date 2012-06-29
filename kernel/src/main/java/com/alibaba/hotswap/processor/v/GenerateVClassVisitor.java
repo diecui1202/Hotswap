@@ -13,6 +13,7 @@ import java.util.Map;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.FieldNode;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
@@ -21,6 +22,7 @@ import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
+import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 
 /**
  * Generate V class
@@ -30,13 +32,23 @@ import com.alibaba.hotswap.util.HotswapFieldUtil;
 public class GenerateVClassVisitor extends BaseClassVisitor {
 
     public GenerateVClassVisitor(ClassVisitor cv){
-        super(cv);
+        super(new VClassRemapperVisitor(cv, new Remapper() {
+
+            public String mapType(String type) {
+                if (HotswapRuntime.hasClassMeta(type) && type.equals(HotswapThreadLocalUtil.getClassName())) {
+                    int v = HotswapRuntime.getClassMeta(type).loadedIndex;
+                    return type + HotswapConstants.V_CLASS_PATTERN + v;
+                }
+
+                return type;
+            }
+        }));
     }
 
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
-        int v = HotswapRuntime.getClassMeta(name).loadedIndex;
-        String vName = name + HotswapConstants.V_CLASS_PATTERN + v;
+        HotswapThreadLocalUtil.setClassName(name);
+        super.visit(version, access, name, signature, superName, interfaces);
         boolean isInterface = ((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE);
 
         if (isInterface && (access & Opcodes.ACC_ABSTRACT) == Opcodes.ACC_ABSTRACT) {
@@ -44,12 +56,9 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
             access = access - Opcodes.ACC_INTERFACE;
         }
 
-        super.visit(version, access, vName, signature, superName, interfaces);
-        className = name;
-
         ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
         classMeta.isInterface = isInterface;
-        if (!classMeta.initialized) {
+        if (!classMeta.isLoaded()) {
             // First load
             for (String key : classMeta.primaryFieldKeyList) {
                 classMeta.primaryFieldNodes.get(key).accept(cv);
@@ -105,12 +114,8 @@ public class GenerateVClassVisitor extends BaseClassVisitor {
     }
 
     @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        return super.visitMethod(access, name, desc, signature, exceptions);
-    }
-
-    @Override
     public void visitEnd() {
+        HotswapThreadLocalUtil.setClassName(null);
         super.visitEnd();
     }
 }

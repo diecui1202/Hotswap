@@ -23,7 +23,7 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  */
 public class ClinitModifier extends BaseMethodAdapter {
 
-    private boolean isInterface = false;
+    private boolean isInterface;
 
     public ClinitModifier(MethodVisitor mv, int access, String name, String desc, String className, boolean isInterface){
         super(mv, access, name, desc, className);

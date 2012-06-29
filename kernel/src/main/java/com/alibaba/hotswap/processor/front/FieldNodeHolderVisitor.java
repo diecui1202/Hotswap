@@ -51,7 +51,7 @@ public class FieldNodeHolderVisitor extends BaseClassVisitor {
         for (int i = 0; i < fieldNodes.size(); i++) {
             classMeta.addloadedFieldMeta(fieldNodes.get(i));
         }
-        if (!classMeta.initialized) {
+        if (!classMeta.isLoaded()) {
             classMeta.primaryFieldNodes.putAll(classMeta.loadedFieldNodes);
         }
         super.visitEnd();

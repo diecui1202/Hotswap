@@ -80,12 +80,9 @@ public class HotswapRuntime {
         meta.clazz = clazz;
     }
 
+    @Deprecated
     public static void setClassInitialized(String className) {
-        if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
-            return;
-        }
-        ClassMeta classMeta = getClassMeta(className);
-        classMeta.initialized = true;
+
     }
 
     public static boolean getClassInitialized(String className) {
@@ -93,7 +90,7 @@ public class HotswapRuntime {
             return false;
         }
         ClassMeta classMeta = getClassMeta(className);
-        return classMeta != null && classMeta.initialized;
+        return classMeta != null && classMeta.clazz != null;
     }
 
     public static void redefineClass(ClassMeta meta) {
