@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.objectweb.asm.ClassVisitor;
-import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.FieldNode;
