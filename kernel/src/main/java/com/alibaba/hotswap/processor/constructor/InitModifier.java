@@ -5,7 +5,7 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.field.holder;
+package com.alibaba.hotswap.processor.constructor;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -18,9 +18,9 @@ import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
  * 
  * @author yong.zhuy 2012-6-13
  */
-public class FieldHolderInitModifier extends BaseMethodAdapter {
+public class InitModifier extends BaseMethodAdapter {
 
-    public FieldHolderInitModifier(MethodVisitor mv, int access, String name, String desc, String className){
+    public InitModifier(MethodVisitor mv, int access, String name, String desc, String className){
         super(mv, access, name, desc, className);
     }
 

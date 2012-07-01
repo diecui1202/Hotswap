@@ -22,11 +22,12 @@ import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.processor.clinit.ClinitVisitor;
+import com.alibaba.hotswap.processor.constructor.InitVisitor;
 import com.alibaba.hotswap.processor.field.access.FieldAccessVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldAheadVisitor;
-import com.alibaba.hotswap.processor.field.holder.FieldHolderInitVisitor;
 import com.alibaba.hotswap.processor.field.holder.FieldHolderVisitor;
 import com.alibaba.hotswap.processor.front.FieldNodeHolderVisitor;
+import com.alibaba.hotswap.processor.front.InitMethodNodeHolderVisitor;
 import com.alibaba.hotswap.processor.front.compile.CompilerErrorVisitor;
 import com.alibaba.hotswap.processor.v.GenerateVClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
@@ -44,10 +45,8 @@ public class HotswapProcessorFactory {
         int index = 0;
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(CompilerErrorVisitor.class);
-
-        index++;
-        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(FieldNodeHolderVisitor.class);
+        hotswap_processor_holder.get(index).add(InitMethodNodeHolderVisitor.class);
 
         index++;
         v_class_processor_index = index;
@@ -57,7 +56,7 @@ public class HotswapProcessorFactory {
         index++;
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(FieldHolderVisitor.class);
-        hotswap_processor_holder.get(index).add(FieldHolderInitVisitor.class);
+        hotswap_processor_holder.get(index).add(InitVisitor.class);
         hotswap_processor_holder.get(index).add(ClinitVisitor.class);
 
         index++;
