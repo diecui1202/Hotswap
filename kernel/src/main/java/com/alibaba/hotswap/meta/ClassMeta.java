@@ -15,6 +15,7 @@ import java.util.Map;
 import org.objectweb.asm.tree.FieldNode;
 
 import com.alibaba.hotswap.util.HotswapFieldUtil;
+import com.alibaba.hotswap.util.HotswapMethodUtil;
 
 /**
  * @author yong.zhuy 2012-5-18 12:39:09
@@ -24,23 +25,24 @@ public class ClassMeta {
     public String                 name;
     public String                 path;
     public long                   lastModified;
-    public boolean                isInterface         = false;
+    public int                    loadedIndex         = 0;
     public Class<?>               clazz;
+    public boolean                isInterface         = false;
     public Class<?>               vClass;
     public String                 vClassName;
     public ClassLoader            loader;
 
     // Class's fields
     public Map<String, FieldMeta> fieldMetas          = new HashMap<String, FieldMeta>();
-
     public byte[]                 loadedBytes;
     public Map<String, FieldNode> loadedFieldNodes    = new HashMap<String, FieldNode>();
     public Map<String, FieldNode> primaryFieldNodes   = new HashMap<String, FieldNode>();
-
     public List<String>           primaryFieldKeyList = new ArrayList<String>();
 
+    // Class's methods
+    public List<MethodMeta>       methodMetas         = new ArrayList<MethodMeta>();
+
     // loaded index
-    public int                    loadedIndex         = 0;
 
     public void addloadedFieldMeta(FieldNode fn) {
         loadedFieldNodes.put(HotswapFieldUtil.getFieldKey(fn.name, fn.desc), fn);
@@ -94,12 +96,18 @@ public class ClassMeta {
         return fm;
     }
 
+    public void addMethodMeta(MethodMeta methodMeta) {
+        methodMeta.setIndex(methodMetas.size());
+        methodMetas.add(methodMeta.getIndex(), methodMeta);
+    }
+
     public boolean isLoaded() {
         return clazz != null;
     }
 
     public void reset() {
         loadedFieldNodes.clear();
+        methodMetas.clear();
         this.loadedIndex++;
     }
 

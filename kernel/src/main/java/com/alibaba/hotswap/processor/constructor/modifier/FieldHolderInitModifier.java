@@ -5,7 +5,7 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.constructor;
+package com.alibaba.hotswap.processor.constructor.modifier;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -18,9 +18,9 @@ import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
  * 
  * @author yong.zhuy 2012-6-13
  */
-public class InitModifier extends BaseMethodAdapter {
+public class FieldHolderInitModifier extends BaseMethodAdapter {
 
-    public InitModifier(MethodVisitor mv, int access, String name, String desc, String className){
+    public FieldHolderInitModifier(MethodVisitor mv, int access, String name, String desc, String className){
         super(mv, access, name, desc, className);
     }
 
@@ -35,12 +35,5 @@ public class InitModifier extends BaseMethodAdapter {
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
         mv.visitFieldInsn(Opcodes.PUTFIELD, className, HotswapConstants.FIELD_HOLDER,
                           "Ljava/util/concurrent/ConcurrentHashMap;");
-    }
-
-    @Override
-    public void visitInsn(int opcode) {
-        if (opcode == Opcodes.RETURN) {
-        }
-        super.visitInsn(opcode);
     }
 }

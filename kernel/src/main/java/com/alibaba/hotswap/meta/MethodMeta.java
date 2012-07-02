@@ -18,11 +18,21 @@ public class MethodMeta {
     public String   signature;
     public String[] exceptions;
 
+    private int     index;
+
     public MethodMeta(int access, String name, String desc, String signature, String[] exceptions){
         this.access = access;
         this.name = name;
         this.desc = desc;
         this.signature = signature;
         this.exceptions = exceptions;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
+    public int getIndex() {
+        return index;
     }
 }

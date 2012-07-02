@@ -15,7 +15,9 @@ import org.objectweb.asm.Opcodes;
  */
 public class BaseClassVisitor extends ClassVisitor {
 
-    protected String className;
+    protected String  className;
+
+    protected boolean isInterface = false;
 
     public BaseClassVisitor(ClassVisitor cv){
         super(Opcodes.ASM4, cv);
@@ -24,6 +26,7 @@ public class BaseClassVisitor extends ClassVisitor {
     @Override
     public void visit(int version, int access, String name, String signature, String superName, String[] interfaces) {
         this.className = name;
+        this.isInterface = ((access & Opcodes.ACC_INTERFACE) == Opcodes.ACC_INTERFACE);
         super.visit(version, access, name, signature, superName, interfaces);
     }
 }

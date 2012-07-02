@@ -28,9 +28,9 @@ import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
  * 
  * @author zhuyong 2012-6-18
  */
-public class GenerateVClassVisitor extends BaseClassVisitor {
+public class VClassGenerateVisitor extends BaseClassVisitor {
 
-    public GenerateVClassVisitor(ClassVisitor cv){
+    public VClassGenerateVisitor(ClassVisitor cv){
         super(new VClassRemapperVisitor(cv, new Remapper() {
 
             public String mapType(String type) {
