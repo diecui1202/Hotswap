@@ -27,6 +27,7 @@ import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.meta.MethodMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.constructor.modifier.ConstructorInvokeModifier;
 import com.alibaba.hotswap.processor.constructor.modifier.ConstructorLVTAdjustModifier;
 import com.alibaba.hotswap.processor.constructor.modifier.FieldHolderInitModifier;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
@@ -51,7 +52,9 @@ public class ConstructorVisitor extends BaseClassVisitor {
             return mn;
         }
 
-        return super.visitMethod(access, name, desc, signature, exceptions);
+        MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+        mv = new ConstructorInvokeModifier(mv, access, name, desc);
+        return mv;
     }
 
     @SuppressWarnings({ "unchecked" })
@@ -64,8 +67,16 @@ public class ConstructorVisitor extends BaseClassVisitor {
             String name = HotswapConstants.INIT;
             String desc = HotswapConstants.UNIFORM_CONSTRUCTOR_DESC;
 
-            MethodVisitor hotswapInit = cv.visitMethod(access, name, desc, null, null);
-            hotswapInit = new FieldHolderInitModifier(hotswapInit, access, name, desc, className);
+            MethodVisitor hotswapInit = new ConstructorInvokeModifier(
+                                                                      new FieldHolderInitModifier(
+                                                                                                  cv.visitMethod(access,
+                                                                                                                 name,
+                                                                                                                 desc,
+                                                                                                                 null,
+                                                                                                                 null),
+                                                                                                  access, name, desc,
+                                                                                                  className), access,
+                                                                      name, desc);
             GeneratorAdapter hotswapInitAdapter = new GeneratorAdapter(hotswapInit, access, name, desc);
 
             hotswapInitAdapter.visitCode();
@@ -74,14 +85,14 @@ public class ConstructorVisitor extends BaseClassVisitor {
                                                                                                 new ConstructorIndexComparator());
 
             for (MethodNode node : initNodes) {
-                MethodMeta initMeta = new MethodMeta(
-                                                     node.access,
-                                                     node.name,
-                                                     node.desc,
-                                                     node.signature,
-                                                     ((String[]) node.exceptions.toArray(new String[node.exceptions.size()])));
-                classMeta.addMethodMeta(initMeta);
-                initMethodMap.put(initMeta, node);
+                MethodMeta meta = new MethodMeta(
+                                                 node.access,
+                                                 node.name,
+                                                 node.desc,
+                                                 node.signature,
+                                                 ((String[]) node.exceptions.toArray(new String[node.exceptions.size()])));
+                classMeta.addMethodMeta(meta);
+                initMethodMap.put(meta, node);
             }
 
             List<MethodMeta> keys = new ArrayList<MethodMeta>(initMethodMap.keySet());
@@ -96,10 +107,10 @@ public class ConstructorVisitor extends BaseClassVisitor {
                 labels[i] = new Label();
             }
 
-            for (int i = 0; i < keys.size(); i++) {
+            for (int i = 0; i < values.size(); i++) {
                 MethodNode node = values.get(i);
                 for (int j = 0; j < node.tryCatchBlocks.size(); j++) {
-                    ((TryCatchBlockNode) node.tryCatchBlocks.get(j)).accept(hotswapInit);
+                    ((TryCatchBlockNode) node.tryCatchBlocks.get(j)).accept(hotswapInitAdapter);
                 }
             }
 
@@ -111,28 +122,27 @@ public class ConstructorVisitor extends BaseClassVisitor {
                 hotswapInitAdapter.visitLabel(labels[i]);
                 MethodNode node = values.get(i);
 
-                storeArgs(hotswapInitAdapter, methodMeta);
-                MethodVisitor methodVisitor = new ConstructorLVTAdjustModifier(hotswapInit, node.access, node.name,
-                                                                               node.desc, 4);
+                storeArgs(hotswapInitAdapter, hotswapInit, methodMeta);
+                MethodVisitor methodVisitor = new ConstructorLVTAdjustModifier(hotswapInit, 3);
+
                 node.instructions.accept(methodVisitor);
 
                 for (int j = 0; j < (node.localVariables == null ? 0 : node.localVariables.size()); j++) {
                     ((LocalVariableNode) node.localVariables.get(j)).accept(methodVisitor);
                 }
             }
-            hotswapInitAdapter.visitLabel(defaultLabel);
+            hotswapInitAdapter.mark(defaultLabel);
 
             hotswapInitAdapter.push(this.className);
-            hotswapInitAdapter.loadArg(1);
             hotswapInitAdapter.invokeStatic(Type.getType(HotswapMethodUtil.class),
-                                            Method.getMethod("NoSuchMethodError noSuchMethodError(String, int)"));
+                                            Method.getMethod("NoSuchMethodError noSuchMethodError(String)"));
             hotswapInitAdapter.throwException();
             hotswapInitAdapter.endMethod();
         }
         super.visitEnd();
     }
 
-    private void storeArgs(GeneratorAdapter adapter, MethodMeta methodMeta) {
+    private void storeArgs(GeneratorAdapter adapter, MethodVisitor hotswapInit, MethodMeta methodMeta) {
         Type[] argTypes = Type.getArgumentTypes(methodMeta.desc);
 
         if (argTypes.length == 0) {
@@ -141,13 +151,13 @@ public class ConstructorVisitor extends BaseClassVisitor {
 
         adapter.loadArg(2);// Object[]
 
-        int nextIndex = 5;
+        int nextIndex = 4;
         for (int i = 0; i < argTypes.length; i++) {
             adapter.dup();
             adapter.push(i);
             adapter.arrayLoad(Type.getType(Object.class));// Object[i]
             adapter.unbox(argTypes[i]);
-            adapter.visitVarInsn(argTypes[i].getOpcode(Opcodes.ISTORE), nextIndex);
+            hotswapInit.visitVarInsn(argTypes[i].getOpcode(Opcodes.ISTORE), nextIndex);
             nextIndex += argTypes[i].getSize();
         }
 

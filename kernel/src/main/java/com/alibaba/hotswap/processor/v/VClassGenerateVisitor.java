@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.objectweb.asm.ClassVisitor;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.FieldNode;
@@ -19,6 +20,7 @@ import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.constructor.modifier.ConstructorInvokeModifier;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
 import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
@@ -42,6 +44,16 @@ public class VClassGenerateVisitor extends BaseClassVisitor {
                 return type;
             }
         }));
+    }
+
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+        if (!isInterface && name.equals(HotswapConstants.CLINIT)) {
+            return null;
+        }
+
+        return new ConstructorInvokeModifier(super.visitMethod(access, name, desc, signature, exceptions), access,
+                                             name, desc);
     }
 
     @Override

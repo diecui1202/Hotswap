@@ -45,7 +45,6 @@ public class HotswapProcessorFactory {
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(CompilerErrorVisitor.class);
         hotswap_processor_holder.get(index).add(FieldNodeHolderVisitor.class);
-        // hotswap_processor_holder.get(index).add(InitMethodNodeHolderVisitor.class);
 
         index++;
         v_class_processor_index = index;
@@ -71,10 +70,10 @@ public class HotswapProcessorFactory {
 
         byte[] classBytes = bytes;
         for (int i = 0; i < hotswap_processor_holder.size(); i++) {
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
 
             ClassVisitor cv = cw;
-            if (HotswapConfiguration.TRACE != null && name.indexOf(HotswapConfiguration.TRACE) >= 0
+            if (HotswapConfiguration.TRACE != null && name.equals(HotswapConfiguration.TRACE)
                 && (i == hotswap_processor_holder.size() - 1 || i == v_class_processor_index)) {
                 cv = new TraceClassVisitor(cw, new PrintWriter(System.out));
             }
@@ -89,7 +88,7 @@ public class HotswapProcessorFactory {
             }
 
             ClassReader cr = new ClassReader(classBytes);
-            cr.accept(cv, ClassReader.EXPAND_FRAMES);
+            cr.accept(cv, ClassReader.SKIP_FRAMES);
             if (i == v_class_processor_index) {
                 // v class
                 byte[] vclassBytes = cw.toByteArray();

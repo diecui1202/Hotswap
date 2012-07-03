@@ -7,9 +7,8 @@
  */
 package com.alibaba.hotswap.util;
 
-import com.alibaba.hotswap.meta.ClassMeta;
-import com.alibaba.hotswap.meta.MethodMeta;
-import com.alibaba.hotswap.runtime.HotswapRuntime;
+import com.alibaba.hotswap.constant.HotswapConstructorSign;
+import com.alibaba.hotswap.runtime.HotswapMethodIndexHolder;
 
 /**
  * @author yong.zhuy 2012-6-14
@@ -20,9 +19,30 @@ public class HotswapMethodUtil {
         return name + "[" + desc + "]";
     }
 
-    public static NoSuchMethodError noSuchMethodError(String className, int index) {
-        ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
-        MethodMeta methodMeta = classMeta.methodMetas.get(index);
-        return new NoSuchMethodError(className.replace("/", ".") + "." + methodMeta.desc);
+    public static NoSuchMethodError noSuchMethodError(String className) {
+        return new NoSuchMethodError(className.replace("/", ".") + ".<init>");
+    }
+
+    public static Object[] processConstructorArgs(Object[] objs, Object arg, int index) {
+        objs[index] = arg;
+        return objs;
+    }
+
+    public static Class<?>[] getConstructorParamTypes() {
+        Class<?>[] types = new Class<?>[3];
+        types[0] = HotswapConstructorSign.class;
+        types[1] = int.class;
+        types[2] = Object[].class;
+
+        return types;
+    }
+
+    public static Object[] getMethodParams(String className, String name, String desc) {
+        Object[] params = new Object[3];
+        params[0] = null;
+        params[1] = HotswapMethodIndexHolder.getMethodIndex(className, name, desc);
+        params[2] = null;
+
+        return params;
     }
 }

@@ -12,6 +12,7 @@ import org.objectweb.asm.MethodVisitor;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.processor.jdk.reflect.modifier.GetDeclaredFieldsModifier;
+import com.alibaba.hotswap.processor.jdk.reflect.modifier.NewInstanceModifier;
 import com.alibaba.hotswap.processor.jdk.reflect.modifier.PrivateGetDeclaredFieldsModifier;
 
 /**
@@ -32,6 +33,10 @@ public class JdkClassVisitor extends BaseClassVisitor {
 
         if (name.equals("getDeclaredFields") || name.equals("getFields()")) {
             return new GetDeclaredFieldsModifier(mv, access, name, desc, className);
+        }
+
+        if (name.equals("newInstance")) {
+            return new NewInstanceModifier(mv, access, name, desc);
         }
 
         return mv;

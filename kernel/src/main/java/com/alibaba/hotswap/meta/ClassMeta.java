@@ -14,33 +14,34 @@ import java.util.Map;
 
 import org.objectweb.asm.tree.FieldNode;
 
+import com.alibaba.hotswap.runtime.HotswapMethodIndexHolder;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
-import com.alibaba.hotswap.util.HotswapMethodUtil;
 
 /**
  * @author yong.zhuy 2012-5-18 12:39:09
  */
 public class ClassMeta {
 
-    public String                 name;
-    public String                 path;
-    public long                   lastModified;
-    public int                    loadedIndex         = 0;
-    public Class<?>               clazz;
-    public boolean                isInterface         = false;
-    public Class<?>               vClass;
-    public String                 vClassName;
-    public ClassLoader            loader;
+    public String                  name;
+    public String                  path;
+    public long                    lastModified;
+    public int                     loadedIndex         = 0;
+    public Class<?>                clazz;
+    public boolean                 isInterface         = false;
+    public Class<?>                vClass;
+    public String                  vClassName;
+    public ClassLoader             loader;
 
     // Class's fields
-    public Map<String, FieldMeta> fieldMetas          = new HashMap<String, FieldMeta>();
-    public byte[]                 loadedBytes;
-    public Map<String, FieldNode> loadedFieldNodes    = new HashMap<String, FieldNode>();
-    public Map<String, FieldNode> primaryFieldNodes   = new HashMap<String, FieldNode>();
-    public List<String>           primaryFieldKeyList = new ArrayList<String>();
+    public Map<String, FieldMeta>  fieldMetas          = new HashMap<String, FieldMeta>();
+    public byte[]                  loadedBytes;
+    public Map<String, FieldNode>  loadedFieldNodes    = new HashMap<String, FieldNode>();
+    public Map<String, FieldNode>  primaryFieldNodes   = new HashMap<String, FieldNode>();
+    public List<String>            primaryFieldKeyList = new ArrayList<String>();
 
     // Class's methods
-    public List<MethodMeta>       methodMetas         = new ArrayList<MethodMeta>();
+    // public List<MethodMeta> methodMetas = new ArrayList<MethodMeta>();
+    public Map<String, MethodMeta> methodMetas         = new HashMap<String, MethodMeta>();
 
     // loaded index
 
@@ -97,8 +98,8 @@ public class ClassMeta {
     }
 
     public void addMethodMeta(MethodMeta methodMeta) {
-        methodMeta.setIndex(methodMetas.size());
-        methodMetas.add(methodMeta.getIndex(), methodMeta);
+        methodMeta.setIndex(HotswapMethodIndexHolder.getMethodIndex(name, methodMeta.name, methodMeta.desc));
+        methodMetas.put(methodMeta.getMethodKey(), methodMeta);
     }
 
     public boolean isLoaded() {

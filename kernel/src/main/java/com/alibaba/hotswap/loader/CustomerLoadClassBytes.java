@@ -19,7 +19,6 @@ import com.alibaba.hotswap.runtime.HotswapRuntime;
  */
 public class CustomerLoadClassBytes {
 
-    @SuppressWarnings("resource")
     public static byte[] loadBytesFromPath(String name, String classPath) {
         File classFile = new File(classPath);
         HotswapRuntime.updateClassMeta(name, classFile);

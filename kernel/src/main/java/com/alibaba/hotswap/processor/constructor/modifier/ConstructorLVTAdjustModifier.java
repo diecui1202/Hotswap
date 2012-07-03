@@ -9,33 +9,32 @@ package com.alibaba.hotswap.processor.constructor.modifier;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
-
-import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
+import org.objectweb.asm.Opcodes;
 
 /**
  * @author zhuyong 2012-7-2
  */
-public class ConstructorLVTAdjustModifier extends BaseMethodAdapter {
+public class ConstructorLVTAdjustModifier extends MethodVisitor {
 
     private int delta;
 
-    public ConstructorLVTAdjustModifier(MethodVisitor mv, int access, String name, String desc, int delta){
-        super(mv, access, name, desc);
+    public ConstructorLVTAdjustModifier(MethodVisitor mv, int delta){
+        super(Opcodes.ASM4, mv);
         this.delta = delta;
     }
 
     @Override
     public void visitVarInsn(int opcode, int var) {
-        super.visitVarInsn(opcode, var > 0 ? var + delta : var);
+        super.visitVarInsn(opcode, var == 0 ? var : delta + var);
     }
 
     @Override
     public void visitIincInsn(int var, int increment) {
-        super.visitIincInsn(var > 0 ? var + delta : var, increment);
+        super.visitIincInsn(var == 0 ? var : delta + var, increment);
     }
 
     @Override
     public void visitLocalVariable(String name, String desc, String signature, Label start, Label end, int index) {
-        super.visitLocalVariable(name, desc, signature, start, end, index > 0 ? index + delta : index);
+        super.visitLocalVariable(name, desc, signature, start, end, index == 0 ? index : delta + index);
     }
 }

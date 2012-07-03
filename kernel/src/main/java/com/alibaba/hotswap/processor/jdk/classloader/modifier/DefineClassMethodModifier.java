@@ -63,11 +63,19 @@ public class DefineClassMethodModifier extends GeneratorAdapter {
     @Override
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.ARETURN) {
+            mv.visitVarInsn(Opcodes.ALOAD, 1);
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "hasClassMeta",
+                               "(Ljava/lang/String;)Z");
+            Label end = new Label();
+            mv.visitJumpInsn(Opcodes.IFEQ, end);
+
             mv.visitInsn(Opcodes.DUP);
             mv.visitVarInsn(Opcodes.ALOAD, 1);
             mv.visitInsn(Opcodes.SWAP);
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),
                                "updateClassMetaClass", "(Ljava/lang/String;Ljava/lang/Class;)V");
+
+            mv.visitLabel(end);
         }
 
         super.visitInsn(opcode);

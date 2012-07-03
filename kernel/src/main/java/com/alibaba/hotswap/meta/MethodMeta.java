@@ -7,6 +7,8 @@
  */
 package com.alibaba.hotswap.meta;
 
+import com.alibaba.hotswap.util.HotswapMethodUtil;
+
 /**
  * @author yong.zhuy 2012-6-15
  */
@@ -26,6 +28,10 @@ public class MethodMeta {
         this.desc = desc;
         this.signature = signature;
         this.exceptions = exceptions;
+    }
+
+    public String getMethodKey() {
+        return HotswapMethodUtil.getMethodKey(name, desc);
     }
 
     public void setIndex(int index) {
