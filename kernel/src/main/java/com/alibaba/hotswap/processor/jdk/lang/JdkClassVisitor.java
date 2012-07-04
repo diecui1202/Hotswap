@@ -5,15 +5,17 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.reflect;
+package com.alibaba.hotswap.processor.jdk.lang;
 
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
-import com.alibaba.hotswap.processor.jdk.reflect.modifier.GetDeclaredFieldsModifier;
-import com.alibaba.hotswap.processor.jdk.reflect.modifier.NewInstanceModifier;
-import com.alibaba.hotswap.processor.jdk.reflect.modifier.PrivateGetDeclaredFieldsModifier;
+import com.alibaba.hotswap.processor.jdk.lang.modifier.GetXConstructorsFilterModifier;
+import com.alibaba.hotswap.processor.jdk.lang.modifier.GetXFieldsFilterModifier;
+import com.alibaba.hotswap.processor.jdk.lang.modifier.NewInstanceModifier;
+import com.alibaba.hotswap.processor.jdk.lang.modifier.PrivateGetDeclaredConstructors;
+import com.alibaba.hotswap.processor.jdk.lang.modifier.PrivateGetDeclaredFieldsModifier;
 
 /**
  * @author zhuyong 2012-6-17 18:08:35
@@ -31,12 +33,20 @@ public class JdkClassVisitor extends BaseClassVisitor {
             return new PrivateGetDeclaredFieldsModifier(mv, access, name, desc, className);
         }
 
-        if (name.equals("getDeclaredFields") || name.equals("getFields()")) {
-            return new GetDeclaredFieldsModifier(mv, access, name, desc, className);
+        if (name.equals("getDeclaredFields") || name.equals("getFields")) {
+            return new GetXFieldsFilterModifier(mv, access, name, desc, className);
         }
 
         if (name.equals("newInstance")) {
             return new NewInstanceModifier(mv, access, name, desc);
+        }
+
+        if (name.equals("privateGetDeclaredConstructors")) {
+            return new PrivateGetDeclaredConstructors(mv, access, name, desc);
+        }
+
+        if (name.equals("getDeclaredConstructors") || name.equals("getConstructors")) {
+            return new GetXConstructorsFilterModifier(mv, access, name, desc);
         }
 
         return mv;

@@ -5,7 +5,7 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.reflect;
+package com.alibaba.hotswap.processor.jdk.helper;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

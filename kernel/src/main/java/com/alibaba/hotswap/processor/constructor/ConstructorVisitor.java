@@ -134,8 +134,9 @@ public class ConstructorVisitor extends BaseClassVisitor {
             hotswapInitAdapter.mark(defaultLabel);
 
             hotswapInitAdapter.push(this.className);
+            hotswapInitAdapter.loadArg(1);
             hotswapInitAdapter.invokeStatic(Type.getType(HotswapMethodUtil.class),
-                                            Method.getMethod("NoSuchMethodError noSuchMethodError(String)"));
+                                            Method.getMethod("Throwable noSuchMethodError(String, int)"));
             hotswapInitAdapter.throwException();
             hotswapInitAdapter.endMethod();
         }

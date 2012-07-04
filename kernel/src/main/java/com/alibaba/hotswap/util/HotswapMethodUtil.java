@@ -7,7 +7,10 @@
  */
 package com.alibaba.hotswap.util;
 
+import org.objectweb.asm.Type;
+
 import com.alibaba.hotswap.constant.HotswapConstructorSign;
+import com.alibaba.hotswap.exception.HotswapException;
 import com.alibaba.hotswap.runtime.HotswapMethodIndexHolder;
 
 /**
@@ -19,8 +22,35 @@ public class HotswapMethodUtil {
         return name + "[" + desc + "]";
     }
 
-    public static NoSuchMethodError noSuchMethodError(String className) {
-        return new NoSuchMethodError(className.replace("/", ".") + ".<init>");
+    public static String getMethodName(String methodKey) {
+        return methodKey.substring(0, methodKey.indexOf('['));
+    }
+
+    public static String getMethodDesc(String methodKey) {
+        return methodKey.substring(methodKey.indexOf('[') + 1, methodKey.indexOf(']'));
+    }
+
+    public static String getNormalMethodDesc(String desc) {
+        Type[] ts = Type.getArgumentTypes(desc);
+        StringBuilder sb = new StringBuilder("(");
+        for (int i = 0; i < ts.length; i++) {
+            sb.append(ts[i].getClassName());
+            if (i < ts.length - 1) {
+                sb.append(" ,");
+            }
+        }
+        sb.append(")");
+
+        return sb.toString();
+    }
+
+    public static Throwable noSuchMethodError(String className, int index) {
+        String methodKey = HotswapMethodIndexHolder.getMethodKeyByIndex(className, index);
+        if (methodKey == null) {
+            return new HotswapException("can't invoke a not exist constructor.");
+        }
+        return new NoSuchMethodError(className.replace("/", ".") + "." + getMethodName(methodKey)
+                                     + getNormalMethodDesc(getMethodDesc(methodKey)));
     }
 
     public static Object[] processConstructorArgs(Object[] objs, Object arg, int index) {

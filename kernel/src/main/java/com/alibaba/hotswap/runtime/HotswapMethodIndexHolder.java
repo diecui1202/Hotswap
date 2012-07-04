@@ -8,7 +8,9 @@
 package com.alibaba.hotswap.runtime;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import com.alibaba.hotswap.util.HotswapMethodUtil;
 import com.alibaba.hotswap.util.HotswapUtil;
@@ -37,5 +39,24 @@ public class HotswapMethodIndexHolder {
         }
 
         return index;
+    }
+
+    public static String getMethodKeyByIndex(String className, int index) {
+        className = HotswapUtil.getInternalClassName(className);
+
+        Map<String, Integer> indexs = METHOD_INDEX_HOLDER.get(className);
+        if (indexs == null) {
+            return null;
+        }
+
+        Iterator<Entry<String, Integer>> iter = indexs.entrySet().iterator();
+        while (iter.hasNext()) {
+            Entry<String, Integer> entry = iter.next();
+            if (entry.getValue().intValue() == index) {
+                return entry.getKey();
+            }
+        }
+
+        return null;
     }
 }

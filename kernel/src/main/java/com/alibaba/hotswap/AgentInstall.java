@@ -65,7 +65,7 @@ public class AgentInstall {
 
     public static void redifineJdkClasses(Instrumentation inst) {
         for (Entry<Class<?>, Class<? extends BaseClassVisitor>> entry : JdkClassProcessorFactory.jdk_class_processor_holder.entrySet()) {
-            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS | ClassWriter.COMPUTE_FRAMES);
+            ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             ClassVisitor cv = cw;
             String name = entry.getKey().getName();
 

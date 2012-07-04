@@ -5,31 +5,30 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.reflect.modifier;
+package com.alibaba.hotswap.processor.jdk.lang.modifier;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
+import com.alibaba.hotswap.processor.jdk.helper.MethodReflectHelper;
 
 /**
- * Filter hotswap field holder
- * 
- * @author zhuyong 2012-6-27
+ * @author zhuyong 2012-7-4
  */
-public class GetDeclaredFieldsModifier extends BaseMethodAdapter {
+public class GetXConstructorsFilterModifier extends BaseMethodAdapter {
 
-    public GetDeclaredFieldsModifier(MethodVisitor mv, int access, String name, String desc, String className){
-        super(mv, access, name, desc, className);
+    public GetXConstructorsFilterModifier(MethodVisitor mv, int access, String name, String desc){
+        super(mv, access, name, desc);
     }
 
     @Override
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.ARETURN) {
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(FieldReflectHelper.class),
-                               "filterHotswapFields", "([Ljava/lang/reflect/Field;)[Ljava/lang/reflect/Field;");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MethodReflectHelper.class),
+                               "filterHotswapConstructor",
+                               "([Ljava/lang/reflect/Constructor;)[Ljava/lang/reflect/Constructor;");
         }
         super.visitInsn(opcode);
     }

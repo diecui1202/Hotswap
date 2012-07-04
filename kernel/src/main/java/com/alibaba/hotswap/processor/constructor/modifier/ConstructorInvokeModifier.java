@@ -7,14 +7,15 @@
  */
 package com.alibaba.hotswap.processor.constructor.modifier;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
-import com.alibaba.hotswap.configuration.HotswapConfiguration;
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
 import com.alibaba.hotswap.runtime.HotswapMethodIndexHolder;
+import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapMethodUtil;
 
 /**
@@ -29,29 +30,39 @@ public class ConstructorInvokeModifier extends BaseMethodAdapter {
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
         if (opcode == Opcodes.INVOKESPECIAL && name.equals(HotswapConstants.INIT)) {
-            if (HotswapConfiguration.getClassPathInWorkspace(owner) != null) {
-                int methodIndex = HotswapMethodIndexHolder.getMethodIndex(owner, name, desc);
-                Type[] argsType = Type.getArgumentTypes(desc);
+            mv.visitLdcInsn(owner);
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "hasClassMeta",
+                               "(Ljava/lang/String;)Z");
+            Label old = newLabel();
+            ifZCmp(EQ, old);
 
-                push(argsType.length);
-                newArray(Type.getType(Object.class));
+            int methodIndex = HotswapMethodIndexHolder.getMethodIndex(owner, name, desc);
+            Type[] argsType = Type.getArgumentTypes(desc);
 
-                for (int i = argsType.length - 1; i >= 0; i--) {
-                    Type type = argsType[i];
-                    swap();
-                    box(type);
-                    push(i);
-                    mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class),
-                                       "processConstructorArgs",
-                                       "([Ljava/lang/Object;Ljava/lang/Object;I)[Ljava/lang/Object;");
-                }
+            push(argsType.length);
+            newArray(Type.getType(Object.class));
 
-                mv.visitLdcInsn(Opcodes.ACONST_NULL);
+            for (int i = argsType.length - 1; i >= 0; i--) {
+                Type type = argsType[i];
                 swap();
-                mv.visitLdcInsn(methodIndex);
-                swap();
-                desc = HotswapConstants.UNIFORM_CONSTRUCTOR_DESC;
+                box(type);
+                push(i);
+                mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class),
+                                   "processConstructorArgs",
+                                   "([Ljava/lang/Object;Ljava/lang/Object;I)[Ljava/lang/Object;");
             }
+
+            mv.visitLdcInsn(Opcodes.ACONST_NULL);
+            swap();
+            mv.visitLdcInsn(methodIndex);
+            swap();
+            super.visitMethodInsn(opcode, owner, name, HotswapConstants.UNIFORM_CONSTRUCTOR_DESC);
+            Label end = newLabel();
+            goTo(end);
+            mark(old);
+            super.visitMethodInsn(opcode, owner, name, desc);
+            mark(end);
+            return;
         }
         super.visitMethodInsn(opcode, owner, name, desc);
     }

@@ -14,7 +14,7 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.commons.Method;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
+import com.alibaba.hotswap.processor.jdk.helper.FieldReflectHelper;
 
 /**
  * @author zhuyong 2012-6-27

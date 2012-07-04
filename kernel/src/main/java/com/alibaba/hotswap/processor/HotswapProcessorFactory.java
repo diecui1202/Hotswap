@@ -44,6 +44,9 @@ public class HotswapProcessorFactory {
         int index = 0;
         hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(CompilerErrorVisitor.class);
+
+        index++;
+        hotswap_processor_holder.add(new ArrayList<Class<? extends BaseClassVisitor>>());
         hotswap_processor_holder.get(index).add(FieldNodeHolderVisitor.class);
 
         index++;
@@ -66,7 +69,6 @@ public class HotswapProcessorFactory {
     @SuppressWarnings("unchecked")
     public static byte[] process(String name, byte[] bytes) throws ClassNotFoundException {
         ClassMeta classMeta = HotswapRuntime.getClassMeta(name);
-        classMeta.reset();
 
         byte[] classBytes = bytes;
         for (int i = 0; i < hotswap_processor_holder.size(); i++) {

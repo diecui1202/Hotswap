@@ -5,7 +5,7 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.reflect.modifier;
+package com.alibaba.hotswap.processor.jdk.lang.modifier;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -13,7 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.reflect.FieldReflectHelper;
+import com.alibaba.hotswap.processor.jdk.helper.FieldReflectHelper;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
@@ -37,9 +37,9 @@ public class PrivateGetDeclaredFieldsModifier extends BaseMethodAdapter {
             Label old = new Label();
             mv.visitJumpInsn(Opcodes.IFEQ, old);
 
-            mv.visitInsn(Opcodes.POP2);
-            mv.visitVarInsn(Opcodes.ALOAD, 0);
-            mv.visitVarInsn(Opcodes.ILOAD, 1);
+            // mv.visitInsn(Opcodes.POP2);
+            // mv.visitVarInsn(Opcodes.ALOAD, 0);
+            // mv.visitVarInsn(Opcodes.ILOAD, 1);
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(FieldReflectHelper.class),
                                "privateGetDeclaredFields0", "(Ljava/lang/Class;Z)[Ljava/lang/reflect/Field;");
             Label end = new Label();

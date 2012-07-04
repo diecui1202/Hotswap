@@ -15,7 +15,7 @@ import java.util.Map;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.processor.jdk.classloader.ClassLoaderVisitor;
 import com.alibaba.hotswap.processor.jdk.classloader.URLClassLoaderVisitor;
-import com.alibaba.hotswap.processor.jdk.reflect.JdkClassVisitor;
+import com.alibaba.hotswap.processor.jdk.lang.JdkClassVisitor;
 import com.alibaba.hotswap.processor.jdk.reflect.JdkFieldVisitor;
 
 /**

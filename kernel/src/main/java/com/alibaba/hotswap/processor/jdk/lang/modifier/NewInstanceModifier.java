@@ -5,7 +5,7 @@
  * use it only in accordance with the terms of the license agreement you entered
  * into with Alibaba.com.
  */
-package com.alibaba.hotswap.processor.jdk.reflect.modifier;
+package com.alibaba.hotswap.processor.jdk.lang.modifier;
 
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
