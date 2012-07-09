@@ -20,9 +20,9 @@ import com.alibaba.hotswap.util.HotswapMethodUtil;
 /**
  * @author zhuyong 2012-7-3
  */
-public class NewInstanceModifier extends BaseMethodAdapter {
+public class ClassNewInstanceModifier extends BaseMethodAdapter {
 
-    public NewInstanceModifier(MethodVisitor mv, int access, String name, String desc){
+    public ClassNewInstanceModifier(MethodVisitor mv, int access, String name, String desc){
         super(mv, access, name, desc);
     }
 

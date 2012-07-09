@@ -13,7 +13,7 @@ import org.objectweb.asm.MethodVisitor;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.processor.jdk.lang.modifier.GetXConstructorsFilterModifier;
 import com.alibaba.hotswap.processor.jdk.lang.modifier.GetXFieldsFilterModifier;
-import com.alibaba.hotswap.processor.jdk.lang.modifier.NewInstanceModifier;
+import com.alibaba.hotswap.processor.jdk.lang.modifier.ClassNewInstanceModifier;
 import com.alibaba.hotswap.processor.jdk.lang.modifier.PrivateGetDeclaredConstructors;
 import com.alibaba.hotswap.processor.jdk.lang.modifier.PrivateGetDeclaredFieldsModifier;
 
@@ -38,7 +38,7 @@ public class JdkClassVisitor extends BaseClassVisitor {
         }
 
         if (name.equals("newInstance")) {
-            return new NewInstanceModifier(mv, access, name, desc);
+            return new ClassNewInstanceModifier(mv, access, name, desc);
         }
 
         if (name.equals("privateGetDeclaredConstructors")) {
