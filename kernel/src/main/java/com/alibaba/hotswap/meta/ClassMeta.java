@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import com.alibaba.hotswap.runtime.HotswapMethodIndexHolder;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
@@ -28,22 +29,21 @@ public class ClassMeta {
     public int                     loadedIndex         = 0;
     public Class<?>                clazz;
     public boolean                 isInterface         = false;
+    public byte[]                  loadedBytes;
     public Class<?>                vClass;
     public String                  vClassName;
     public ClassLoader             loader;
 
     // Class's fields
     public Map<String, FieldMeta>  fieldMetas          = new HashMap<String, FieldMeta>();
-    public byte[]                  loadedBytes;
     public Map<String, FieldNode>  loadedFieldNodes    = new HashMap<String, FieldNode>();
     public Map<String, FieldNode>  primaryFieldNodes   = new HashMap<String, FieldNode>();
     public List<String>            primaryFieldKeyList = new ArrayList<String>();
 
     // Class's methods
-    // public List<MethodMeta> methodMetas = new ArrayList<MethodMeta>();
-    public Map<String, MethodMeta> methodMetas         = new HashMap<String, MethodMeta>();
-
-    // loaded index
+    public Map<String, MethodMeta> initMetas           = new HashMap<String, MethodMeta>();
+    public Map<String, MethodNode> primaryInitNodes    = new HashMap<String, MethodNode>();
+    public List<String>            primaryInitKeyList  = new ArrayList<String>();
 
     public void addloadedFieldMeta(FieldNode fn) {
         loadedFieldNodes.put(HotswapFieldUtil.getFieldKey(fn.name, fn.desc), fn);
@@ -97,9 +97,12 @@ public class ClassMeta {
         return fm;
     }
 
-    public void addMethodMeta(MethodMeta methodMeta) {
-        methodMeta.setIndex(HotswapMethodIndexHolder.getMethodIndex(name, methodMeta.name, methodMeta.desc));
-        methodMetas.put(methodMeta.getMethodKey(), methodMeta);
+    public void refreshInitMeta(MethodMeta initMeta, boolean added) {
+        initMeta.setIndex(HotswapMethodIndexHolder.getMethodIndex(name, initMeta.name, initMeta.desc));
+
+        initMeta.added = added;
+        initMeta.loadedIndex = this.loadedIndex;
+        initMetas.put(initMeta.getKey(), initMeta);
     }
 
     public boolean isLoaded() {
@@ -108,7 +111,6 @@ public class ClassMeta {
 
     public void reset() {
         loadedFieldNodes.clear();
-        methodMetas.clear();
         this.loadedIndex++;
     }
 

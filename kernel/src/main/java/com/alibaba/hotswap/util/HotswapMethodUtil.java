@@ -47,13 +47,13 @@ public class HotswapMethodUtil {
     public static Throwable noSuchMethodError(String className, int index) {
         String methodKey = HotswapMethodIndexHolder.getMethodKeyByIndex(className, index);
         if (methodKey == null) {
-            return new HotswapException("can't invoke a not exist constructor.");
+            return new HotswapException("can't invoke a non-exist constructor.");
         }
         return new NoSuchMethodError(className.replace("/", ".") + "." + getMethodName(methodKey)
                                      + getNormalMethodDesc(getMethodDesc(methodKey)));
     }
 
-    public static Object[] processConstructorArgs(Object[] objs, Object arg, int index) {
+    public static Object[] processConstructorArgs(Object[] objs, int index, Object arg) {
         objs[index] = arg;
         return objs;
     }

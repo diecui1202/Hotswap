@@ -217,12 +217,4 @@ public class FieldReflectHelper {
             e.printStackTrace();
         }
     }
-
-    public static Class<?> getVClassByClass(Class<?> clazz) {
-        String className = clazz.getName();
-        if (!HotswapRuntime.hasClassMeta(className)) {
-            return null;
-        }
-        return HotswapRuntime.getClassMeta(className).vClass;
-    }
 }

@@ -14,6 +14,7 @@ import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
+import com.alibaba.hotswap.processor.jdk.helper.MethodReflectHelper;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapMethodUtil;
 
@@ -29,15 +30,31 @@ public class ConstructorNewInstanceModifier extends BaseMethodAdapter {
     @Override
     public void visitCode() {
         super.visitCode();
+        Label old = new Label();
 
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "parameterTypes", "[Ljava/lang/Class;");
+        dup();
+        mv.visitInsn(Opcodes.ARRAYLENGTH);
+        Label zeroLen = newLabel();
+        ifZCmp(EQ, zeroLen);
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MethodReflectHelper.class),
+                           "isUniformConstructorArgsType", "([Ljava/lang/Class;)Z");
+        ifZCmp(EQ, old);
+        push(0);
+        mark(zeroLen);
+        pop();
+        goTo(old);
+
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "hasClassMeta",
                            "(Ljava/lang/String;)Z");
-        Label old = new Label();
         mv.visitJumpInsn(Opcodes.IFEQ, old);
 
         mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class),
                            "getConstructorParamTypes", "()[Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getConstructor",
@@ -45,6 +62,7 @@ public class ConstructorNewInstanceModifier extends BaseMethodAdapter {
 
         // index
         mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
         mv.visitLdcInsn(HotswapConstants.INIT);
         mv.visitLdcInsn("()V");

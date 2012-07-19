@@ -7,6 +7,7 @@
  */
 package com.alibaba.hotswap.processor.jdk;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.net.URLClassLoader;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.processor.jdk.classloader.ClassLoaderVisitor;
 import com.alibaba.hotswap.processor.jdk.classloader.URLClassLoaderVisitor;
 import com.alibaba.hotswap.processor.jdk.lang.JdkClassVisitor;
+import com.alibaba.hotswap.processor.jdk.reflect.JdkConstructorVisitor;
 import com.alibaba.hotswap.processor.jdk.reflect.JdkFieldVisitor;
 
 /**
@@ -30,5 +32,6 @@ public class JdkClassProcessorFactory {
         jdk_class_processor_holder.put(URLClassLoader.class, URLClassLoaderVisitor.class);
         jdk_class_processor_holder.put(Class.class, JdkClassVisitor.class);
         jdk_class_processor_holder.put(Field.class, JdkFieldVisitor.class);
+        jdk_class_processor_holder.put(Constructor.class, JdkConstructorVisitor.class);
     }
 }

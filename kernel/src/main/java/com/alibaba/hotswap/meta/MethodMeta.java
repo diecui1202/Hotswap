@@ -12,25 +12,18 @@ import com.alibaba.hotswap.util.HotswapMethodUtil;
 /**
  * @author yong.zhuy 2012-6-15
  */
-public class MethodMeta {
+public class MethodMeta extends MetaInfo {
 
-    public int      access;
-    public String   name;
-    public String   desc;
-    public String   signature;
     public String[] exceptions;
 
     private int     index;
 
     public MethodMeta(int access, String name, String desc, String signature, String[] exceptions){
-        this.access = access;
-        this.name = name;
-        this.desc = desc;
-        this.signature = signature;
+        super(access, name, desc, signature);
         this.exceptions = exceptions;
     }
 
-    public String getMethodKey() {
+    public String getKey() {
         return HotswapMethodUtil.getMethodKey(name, desc);
     }
 

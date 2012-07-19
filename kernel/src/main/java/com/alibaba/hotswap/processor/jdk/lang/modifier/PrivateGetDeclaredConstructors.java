@@ -37,9 +37,6 @@ public class PrivateGetDeclaredConstructors extends BaseMethodAdapter {
             Label old = new Label();
             mv.visitJumpInsn(Opcodes.IFEQ, old);
 
-            // mv.visitInsn(Opcodes.POP2);
-            // mv.visitVarInsn(Opcodes.ALOAD, 0);
-            // mv.visitVarInsn(Opcodes.ILOAD, 1);
             mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MethodReflectHelper.class),
                                "getDeclaredConstructors0", "(Ljava/lang/Class;Z)[Ljava/lang/reflect/Constructor;");
             Label end = new Label();

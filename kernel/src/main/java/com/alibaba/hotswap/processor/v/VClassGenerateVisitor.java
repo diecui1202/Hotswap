@@ -7,7 +7,9 @@
  */
 package com.alibaba.hotswap.processor.v;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.objectweb.asm.ClassVisitor;
@@ -15,14 +17,15 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.commons.Remapper;
 import org.objectweb.asm.tree.FieldNode;
+import org.objectweb.asm.tree.MethodNode;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
-import com.alibaba.hotswap.processor.constructor.modifier.ConstructorInvokeModifier;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
+import com.alibaba.hotswap.util.HotswapMethodUtil;
 import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 
 /**
@@ -31,6 +34,9 @@ import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
  * @author zhuyong 2012-6-18
  */
 public class VClassGenerateVisitor extends BaseClassVisitor {
+
+    private List<String>            initKeys  = new ArrayList<String>();
+    private Map<String, MethodNode> initNodes = new HashMap<String, MethodNode>();
 
     public VClassGenerateVisitor(ClassVisitor cv){
         super(new VClassRemapperVisitor(cv, new Remapper() {
@@ -44,16 +50,6 @@ public class VClassGenerateVisitor extends BaseClassVisitor {
                 return type;
             }
         }));
-    }
-
-    @Override
-    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-        if (!isInterface && name.equals(HotswapConstants.CLINIT)) {
-            return null;
-        }
-
-        return new ConstructorInvokeModifier(super.visitMethod(access, name, desc, signature, exceptions), access,
-                                             name, desc);
     }
 
     @Override
@@ -125,8 +121,51 @@ public class VClassGenerateVisitor extends BaseClassVisitor {
     }
 
     @Override
+    public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
+        if (!isInterface && name.equals(HotswapConstants.CLINIT)) {
+            return null;
+        }
+
+        if (name.equals(HotswapConstants.INIT)) {
+            MethodNode mn = new MethodNode(access, name, desc, signature, exceptions);
+
+            String mk = HotswapMethodUtil.getMethodKey(name, desc);
+            initKeys.add(mk);
+            initNodes.put(mk, mn);
+
+            return mn;
+        }
+
+        return super.visitMethod(access, name, desc, signature, exceptions);
+    }
+
+    @Override
     public void visitEnd() {
         HotswapThreadLocalUtil.setClassName(null);
+        processInitMethods();
         super.visitEnd();
+    }
+
+    private void processInitMethods() {
+        ClassMeta classMeta = HotswapRuntime.getClassMeta(className);
+        if (!HotswapRuntime.getClassInitialized(className)) {
+            // The first time
+            for (String mk : initKeys) {
+                initNodes.get(mk).accept(cv);
+            }
+        } else {
+            // Reload
+            for (String mk : classMeta.primaryInitKeyList) {
+                MethodNode node = initNodes.remove(mk);
+                if (node == null) {
+                    node = classMeta.primaryInitNodes.get(mk);
+                }
+                node.accept(cv);
+            }
+
+            for (MethodNode node : initNodes.values()) {
+                node.accept(cv);
+            }
+        }
     }
 }

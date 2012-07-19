@@ -13,7 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.processor.jdk.helper.FieldReflectHelper;
+import com.alibaba.hotswap.processor.jdk.helper.ReflectHelper;
 
 /**
  * @author zhuyong 2012-6-28
@@ -26,12 +26,13 @@ public class DeclaredAnnotationsModifier extends BaseMethodAdapter {
 
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
-        if (opcode == Opcodes.INVOKEVIRTUAL && owner.equals("java/lang/reflect/Field")
+        if (opcode == Opcodes.INVOKEVIRTUAL
+            && (owner.equals("java/lang/reflect/Field") || owner.equals("java/lang/reflect/Constructor"))
             && name.equals("getDeclaringClass") && desc.equals("()Ljava/lang/Class;")) {
             super.visitMethodInsn(opcode, owner, name, desc);
             dup();
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(FieldReflectHelper.class),
-                               "getVClassByClass", "(Ljava/lang/Class;)Ljava/lang/Class;");
+            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(ReflectHelper.class), "getVClassByClass",
+                               "(Ljava/lang/Class;)Ljava/lang/Class;");
             dup();
             Label old = newLabel();
             ifNull(old);

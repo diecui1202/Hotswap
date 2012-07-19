@@ -21,7 +21,6 @@ import com.alibaba.hotswap.meta.FieldMeta;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
-import com.alibaba.hotswap.util.HotswapUtil;
 
 /**
  * @author zhuyong 2012-6-16 08:52:55
@@ -111,7 +110,5 @@ public class FieldAheadVisitor extends BaseClassVisitor {
                 iter.remove();
             }
         }
-
-        HotswapUtil.sysout(classMeta);
     }
 }

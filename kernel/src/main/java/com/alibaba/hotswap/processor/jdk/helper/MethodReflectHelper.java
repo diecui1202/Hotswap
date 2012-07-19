@@ -13,9 +13,13 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.objectweb.asm.Type;
+
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.meta.ClassMeta;
+import com.alibaba.hotswap.meta.MethodMeta;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
+import com.alibaba.hotswap.util.HotswapMethodUtil;
 
 /**
  * @author zhuyong 2012-7-4
@@ -60,13 +64,18 @@ public class MethodReflectHelper {
 
         try {
             List<Constructor<?>> constructorList = new ArrayList<Constructor<?>>();
-            // Remove field which has been deleted
+            // Remove constructor which has been deleted
+
             Field clazzField = Constructor.class.getDeclaredField("clazz");
             clazzField.setAccessible(true);
 
             for (Constructor<?> c : constructors) {
-                clazzField.set(c, clazz);
-                constructorList.add(c);
+                String mk = HotswapMethodUtil.getMethodKey(HotswapConstants.INIT, Type.getConstructorDescriptor(c));
+                MethodMeta mm = classMeta.initMetas.get(mk);
+                if (!mm.isDeleted(classMeta.loadedIndex)) {
+                    clazzField.set(c, clazz);
+                    constructorList.add(c);
+                }
             }
 
             Method getDeclaredConstructors0Method = Class.class.getDeclaredMethod("getDeclaredConstructors0",
