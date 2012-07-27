@@ -16,8 +16,8 @@ import java.util.List;
  */
 public class HotswapConfiguration {
 
-    public static boolean      VERBOSE        = false;
     public static String       TRACE          = null;
+    public static boolean      AUTO_RELOAD    = true;
 
     public static List<String> WORKSPACE_DIRS = new ArrayList<String>();
 

@@ -7,6 +7,7 @@
  */
 package com.alibaba.hotswap.processor.constructor.modifier;
 
+import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
@@ -30,10 +31,17 @@ public class FieldHolderInitModifier extends BaseMethodAdapter {
 
         // this.__$$hotswap_field_holder$$__ = new ConcurrentHashMap();
         mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, className, HotswapConstants.FIELD_HOLDER,
+                          "Ljava/util/concurrent/ConcurrentHashMap;");
+        Label end = newLabel();
+        ifNonNull(end);
+
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
         mv.visitInsn(Opcodes.DUP);
         mv.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
         mv.visitFieldInsn(Opcodes.PUTFIELD, className, HotswapConstants.FIELD_HOLDER,
                           "Ljava/util/concurrent/ConcurrentHashMap;");
+        mark(end);
     }
 }

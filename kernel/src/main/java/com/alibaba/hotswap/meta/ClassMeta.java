@@ -17,6 +17,7 @@ import org.objectweb.asm.tree.MethodNode;
 
 import com.alibaba.hotswap.runtime.HotswapMethodIndexHolder;
 import com.alibaba.hotswap.util.HotswapFieldUtil;
+import com.alibaba.hotswap.util.HotswapMethodUtil;
 
 /**
  * @author yong.zhuy 2012-5-18 12:39:09
@@ -103,6 +104,12 @@ public class ClassMeta {
         initMeta.added = added;
         initMeta.loadedIndex = this.loadedIndex;
         initMetas.put(initMeta.getKey(), initMeta);
+    }
+
+    public boolean isPrimaryInitMethod(String name, String desc) {
+        String mk = HotswapMethodUtil.getMethodKey(name, desc);
+        MethodMeta mm = initMetas.get(mk);
+        return primaryInitKeyList.contains(mk) && mm != null && !mm.isAdded() && !mm.isDeleted(loadedIndex);
     }
 
     public boolean isLoaded() {

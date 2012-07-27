@@ -63,16 +63,21 @@ public class HotswapMethodUtil {
         types[0] = HotswapConstructorSign.class;
         types[1] = int.class;
         types[2] = Object[].class;
-
         return types;
     }
 
-    public static Object[] getMethodParams(String className, String name, String desc) {
+    public static Object[] getMethodParams(String className, String name, String desc, Object... args) {
         Object[] params = new Object[3];
         params[0] = null;
         params[1] = HotswapMethodIndexHolder.getMethodIndex(className, name, desc);
-        params[2] = null;
-
+        if (args == null || args.length == 0) {
+            params[2] = new Object[0];
+        } else {
+            params[2] = new Object[args.length];
+            for (int i = 0; i < args.length; i++) {
+                ((Object[]) params[2])[i] = args[i];
+            }
+        }
         return params;
     }
 }

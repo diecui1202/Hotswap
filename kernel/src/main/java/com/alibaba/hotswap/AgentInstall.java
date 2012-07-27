@@ -61,6 +61,11 @@ public class AgentInstall {
         if (trace != null) {
             HotswapConfiguration.TRACE = trace;
         }
+
+        String autoReload = System.getProperty("hotswap.autoreload");
+        if (autoReload != null && autoReload.equalsIgnoreCase("false")) {
+            HotswapConfiguration.AUTO_RELOAD = false;
+        }
     }
 
     public static void redifineJdkClasses(Instrumentation inst) {
@@ -84,10 +89,12 @@ public class AgentInstall {
     }
 
     private static void startReloadChecker() {
-        Thread reloader = new Thread(new ReloadChecker());
-        reloader.setName("Hotswap Reloader");
-        reloader.setDaemon(true);
+        if (HotswapConfiguration.AUTO_RELOAD) {
+            Thread reloader = new Thread(new ReloadChecker());
+            reloader.setName("Hotswap Reloader");
+            reloader.setDaemon(true);
 
-        reloader.start();
+            reloader.start();
+        }
     }
 }

@@ -11,6 +11,7 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
+import com.alibaba.hotswap.processor.jdk.reflect.modifier.ConstructorNewInstanceModifier;
 import com.alibaba.hotswap.processor.jdk.reflect.modifier.DeclaredAnnotationsModifier;
 
 /**
@@ -25,9 +26,9 @@ public class JdkConstructorVisitor extends BaseClassVisitor {
     @Override
     public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
-        // if (name.equals("newInstance") && desc.equals("([Ljava/lang/Object;)Ljava/lang/Object;")) {
-        // return new ConstructorNewInstanceModifier(mv, access, name, desc);
-        // }
+        if (name.equals("newInstance") && desc.equals("([Ljava/lang/Object;)Ljava/lang/Object;")) {
+            return new ConstructorNewInstanceModifier(mv, access, name, desc);
+        }
 
         if (name.equals("declaredAnnotations") && desc.equals("()Ljava/util/Map;")) {
             return new DeclaredAnnotationsModifier(mv, access, name, desc);

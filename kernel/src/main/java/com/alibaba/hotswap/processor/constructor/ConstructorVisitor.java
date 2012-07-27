@@ -57,7 +57,8 @@ public class ConstructorVisitor extends BaseClassVisitor {
             String mk = HotswapMethodUtil.getMethodKey(name, desc);
             initKeys.add(mk);
             initNodes.put(mk, mn);
-            return mn;
+            MethodVisitor mv = new FieldHolderInitModifier(mn, access, name, desc, className);
+            return mv;
         }
 
         MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
@@ -143,15 +144,8 @@ public class ConstructorVisitor extends BaseClassVisitor {
         String name = HotswapConstants.INIT;
         String desc = HotswapConstants.UNIFORM_CONSTRUCTOR_DESC;
 
-        MethodVisitor hotswapInit = new ConstructorInvokeModifier(
-                                                                  new FieldHolderInitModifier(
-                                                                                              cv.visitMethod(access,
-                                                                                                             name,
-                                                                                                             desc,
-                                                                                                             null, null),
-                                                                                              access, name, desc,
-                                                                                              className), access, name,
-                                                                  desc);
+        MethodVisitor hotswapInit = new ConstructorInvokeModifier(cv.visitMethod(access, name, desc, null, null),
+                                                                  access, name, desc);
         GeneratorAdapter hotswapInitAdapter = new GeneratorAdapter(hotswapInit, access, name, desc);
 
         hotswapInitAdapter.visitCode();

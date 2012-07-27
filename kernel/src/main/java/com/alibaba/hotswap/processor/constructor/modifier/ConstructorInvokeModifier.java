@@ -31,6 +31,7 @@ public class ConstructorInvokeModifier extends BaseMethodAdapter {
     public void visitMethodInsn(int opcode, String owner, String name, String desc) {
         if (opcode == Opcodes.INVOKESPECIAL && name.equals(HotswapConstants.INIT)) {
             if (HotswapRuntime.hasClassMeta(owner)) {
+                // Try to reload owner.
                 ClassMeta classMeta = HotswapRuntime.getClassMeta(owner);
                 String mk = HotswapMethodUtil.getMethodKey(name, desc);
                 MethodMeta mm = classMeta.initMetas.get(mk);

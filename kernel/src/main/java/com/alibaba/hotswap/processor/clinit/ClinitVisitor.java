@@ -10,11 +10,9 @@ package com.alibaba.hotswap.processor.clinit;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseClassVisitor;
-import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
  * Replace <code>&lt;clinit&gt;</code> to <code>__$$hotswap_clinit$$__</code> for when the class bytes are been
@@ -73,10 +71,6 @@ public class ClinitVisitor extends BaseClassVisitor {
                     mv.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
                                       "Ljava/util/concurrent/ConcurrentHashMap;");
 
-                    mv.visitLdcInsn(className);
-                    mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),
-                                       "setClassInitialized", "(Ljava/lang/String;)V");
-
                     mv.visitInsn(Opcodes.RETURN);
                     mv.visitMaxs(2, 0);
                     mv.visitEnd();
@@ -118,16 +112,6 @@ public class ClinitVisitor extends BaseClassVisitor {
 
         if (clinit != null) {
             clinit.visitCode();
-
-            // clinit.visitTypeInsn(Opcodes.NEW, "java/util/concurrent/ConcurrentHashMap");
-            // clinit.visitInsn(Opcodes.DUP);
-            // clinit.visitMethodInsn(Opcodes.INVOKESPECIAL, "java/util/concurrent/ConcurrentHashMap", "<init>", "()V");
-            // clinit.visitFieldInsn(Opcodes.PUTSTATIC, className, HotswapConstants.STATIC_FIELD_HOLDER,
-            // "Ljava/util/concurrent/ConcurrentHashMap;");
-
-            clinit.visitLdcInsn(className);
-            clinit.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class),
-                                   "setClassInitialized", "(Ljava/lang/String;)V");
 
             clinit.visitInsn(Opcodes.RETURN);
             clinit.visitMaxs(0, 0);

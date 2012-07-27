@@ -13,6 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
+import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
 import com.alibaba.hotswap.util.HotswapMethodUtil;
@@ -37,19 +38,32 @@ public class ClassNewInstanceModifier extends BaseMethodAdapter {
         Label old = new Label();
         mv.visitJumpInsn(Opcodes.IFEQ, old);
 
+        // check it as a primary constructor
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "getClassMeta",
+                           "(Ljava/lang/String;)Lcom/alibaba/hotswap/meta/ClassMeta;");
+        mv.visitLdcInsn(HotswapConstants.INIT);
+        mv.visitLdcInsn("()V");
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(ClassMeta.class), "isPrimaryInitMethod",
+                           "(Ljava/lang/String;Ljava/lang/String;)Z");
+        mv.visitJumpInsn(Opcodes.IFNE, old);
+
+        // get uniform constructor
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class),
                            "getConstructorParamTypes", "()[Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getConstructor",
                            "([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
 
-        // index
+        // index and objs
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
         mv.visitLdcInsn(HotswapConstants.INIT);
         mv.visitLdcInsn("()V");
+        loadArgs();
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class), "getMethodParams",
-                           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/Object;");
+                           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)[Ljava/lang/Object;");
 
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance",
                            "([Ljava/lang/Object;)Ljava/lang/Object;");

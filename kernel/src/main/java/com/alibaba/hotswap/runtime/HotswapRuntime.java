@@ -17,6 +17,7 @@ import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.exception.HotswapException;
 import com.alibaba.hotswap.loader.CustomerLoadClassBytes;
 import com.alibaba.hotswap.meta.ClassMeta;
+import com.alibaba.hotswap.util.HotswapThreadLocalUtil;
 import com.alibaba.hotswap.util.HotswapUtil;
 
 /**
@@ -80,11 +81,6 @@ public class HotswapRuntime {
         meta.clazz = clazz;
     }
 
-    @Deprecated
-    public static void setClassInitialized(String className) {
-
-    }
-
     public static boolean getClassInitialized(String className) {
         if (className.indexOf(HotswapConstants.V_CLASS_PATTERN) > 0) {
             return false;
@@ -93,35 +89,49 @@ public class HotswapRuntime {
         return classMeta != null && classMeta.clazz != null;
     }
 
+    public static void try2Reload(String className) {
+        ClassMeta classMeta = getClassMeta(className);
+        redefineClass(classMeta);
+    }
+
     public static void redefineClass(ClassMeta meta) {
         byte[] klass = null;
 
-        try {
-            klass = CustomerLoadClassBytes.loadBytesFromPath(meta.name, meta.path);
-        } catch (HotswapException he) {
-            HotswapUtil.sysout(he);
+        if (HotswapThreadLocalUtil.isReloading(meta.name)) {
             return;
         }
 
-        ClassDefinition definitions = new ClassDefinition(meta.clazz, klass);
         try {
-            inst.redefineClasses(definitions);
+            HotswapThreadLocalUtil.addReloading(meta.name, meta);
 
             try {
-                Method clinit = meta.clazz.getDeclaredMethod(HotswapConstants.HOTSWAP_CLINIT, (Class<?>[]) null);
-                clinit.setAccessible(true);
-                clinit.invoke(null, (Object[]) null);
-            } catch (Exception e) {
-                if (!(e instanceof NoSuchMethodException)) {
-                    System.out.println("invoke " + HotswapConstants.HOTSWAP_CLINIT + " error, className: "
-                                       + meta.name.replace('/', '.'));
-                    e.printStackTrace();
-                }
+                klass = CustomerLoadClassBytes.loadBytesFromPath(meta.name, meta.path);
+            } catch (HotswapException he) {
+                throw he;
             }
 
-            HotswapUtil.sysout("Success to reload class: " + meta.name.replace('/', '.') + " @ " + meta.path);
-        } catch (Exception e) {
-            throw new HotswapException("redefine class error, name: " + meta.name.replace('/', '.'), e);
+            ClassDefinition definitions = new ClassDefinition(meta.clazz, klass);
+            try {
+                inst.redefineClasses(definitions);
+
+                try {
+                    Method clinit = meta.clazz.getDeclaredMethod(HotswapConstants.HOTSWAP_CLINIT, (Class<?>[]) null);
+                    clinit.setAccessible(true);
+                    clinit.invoke(null, (Object[]) null);
+                } catch (Exception e) {
+                    if (!(e instanceof NoSuchMethodException)) {
+                        System.out.println("invoke " + HotswapConstants.HOTSWAP_CLINIT + " error, className: "
+                                           + meta.name.replace('/', '.'));
+                        e.printStackTrace();
+                    }
+                }
+
+                // HotswapUtil.sysout("Success to reload class: " + meta.name.replace('/', '.') + " @ " + meta.path);
+            } catch (Exception e) {
+                throw new HotswapException("redefine class error, name: " + meta.name.replace('/', '.'), e);
+            }
+        } finally {
+            HotswapThreadLocalUtil.removeReloading(meta.name);
         }
     }
 

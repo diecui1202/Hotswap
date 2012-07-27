@@ -13,6 +13,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
+import com.alibaba.hotswap.meta.ClassMeta;
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
 import com.alibaba.hotswap.processor.jdk.helper.MethodReflectHelper;
 import com.alibaba.hotswap.runtime.HotswapRuntime;
@@ -34,17 +35,9 @@ public class ConstructorNewInstanceModifier extends BaseMethodAdapter {
 
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "parameterTypes", "[Ljava/lang/Class;");
-        dup();
-        mv.visitInsn(Opcodes.ARRAYLENGTH);
-        Label zeroLen = newLabel();
-        ifZCmp(EQ, zeroLen);
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(MethodReflectHelper.class),
                            "isUniformConstructorArgsType", "([Ljava/lang/Class;)Z");
-        ifZCmp(EQ, old);
-        push(0);
-        mark(zeroLen);
-        pop();
-        goTo(old);
+        ifZCmp(NE, old);
 
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
@@ -53,6 +46,21 @@ public class ConstructorNewInstanceModifier extends BaseMethodAdapter {
                            "(Ljava/lang/String;)Z");
         mv.visitJumpInsn(Opcodes.IFEQ, old);
 
+        // check it as a primary constructor
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "getClassMeta",
+                           "(Ljava/lang/String;)Lcom/alibaba/hotswap/meta/ClassMeta;");
+        mv.visitLdcInsn(HotswapConstants.INIT);
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(Type.class), "getConstructorDescriptor",
+                           "(Ljava/lang/reflect/Constructor;)Ljava/lang/String;");
+        mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, Type.getInternalName(ClassMeta.class), "isPrimaryInitMethod",
+                           "(Ljava/lang/String;Ljava/lang/String;)Z");
+        mv.visitJumpInsn(Opcodes.IFNE, old);
+
+        // get uniform constructor
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class),
@@ -60,14 +68,17 @@ public class ConstructorNewInstanceModifier extends BaseMethodAdapter {
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getConstructor",
                            "([Ljava/lang/Class;)Ljava/lang/reflect/Constructor;");
 
-        // index
+        // index and objs
         mv.visitVarInsn(Opcodes.ALOAD, 0);
         mv.visitFieldInsn(Opcodes.GETFIELD, "java/lang/reflect/Constructor", "clazz", "Ljava/lang/Class;");
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/Class", "getName", "()Ljava/lang/String;");
         mv.visitLdcInsn(HotswapConstants.INIT);
-        mv.visitLdcInsn("()V");
+        mv.visitVarInsn(Opcodes.ALOAD, 0);
+        mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(Type.class), "getConstructorDescriptor",
+                           "(Ljava/lang/reflect/Constructor;)Ljava/lang/String;");
+        loadArgs();
         mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapMethodUtil.class), "getMethodParams",
-                           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)[Ljava/lang/Object;");
+                           "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)[Ljava/lang/Object;");
 
         mv.visitMethodInsn(Opcodes.INVOKEVIRTUAL, "java/lang/reflect/Constructor", "newInstance",
                            "([Ljava/lang/Object;)Ljava/lang/Object;");

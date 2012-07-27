@@ -9,11 +9,9 @@ package com.alibaba.hotswap.processor.clinit;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 import com.alibaba.hotswap.constant.HotswapConstants;
 import com.alibaba.hotswap.processor.basic.BaseMethodAdapter;
-import com.alibaba.hotswap.runtime.HotswapRuntime;
 
 /**
  * Insert __hotswap_static_field_holder__ initialize code at the beginning of clinit method. Set this class has beed
@@ -47,9 +45,6 @@ public class ClinitModifier extends BaseMethodAdapter {
     public void visitInsn(int opcode) {
         if (opcode == Opcodes.RETURN) {
 
-            mv.visitLdcInsn(className);
-            mv.visitMethodInsn(Opcodes.INVOKESTATIC, Type.getInternalName(HotswapRuntime.class), "setClassInitialized",
-                               "(Ljava/lang/String;)V");
         }
         super.visitInsn(opcode);
     }
